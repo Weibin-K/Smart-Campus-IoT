@@ -909,6 +909,25 @@ button:focus-visible,#search:focus-visible,.item:focus-visible{outline:3px solid
 .lbadge i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--c0)}
 .lbadge.off{color:var(--c3)} .lbadge.off i{background:var(--c3)}
 .ckey.tkey{padding:8px 0 0}
+/* Member 1: sensor badge (W05) and room controls (W09) */
+.psens{padding-top:10px;padding-bottom:10px}
+.psens span{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;line-height:1.3;padding:5px 11px;border-radius:999px;background:var(--ground);color:var(--sc,var(--muted))}
+.psens i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--sc,var(--cx))}
+.psens.live{--sc:var(--c0)} .psens.offline{--sc:var(--c3)}
+.pctl h3{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pmode{font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:0;text-transform:none;padding:3px 9px;border-radius:999px;background:var(--ground);color:var(--muted);white-space:nowrap}
+.pmode.man{background:var(--c2);color:#fff}
+.prow{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:8px;margin-top:8px}
+.prow small{color:var(--muted);font-size:12px}
+.pseg{display:flex;gap:4px;background:var(--ground);border-radius:10px;padding:3px;min-width:0}
+.pseg button{flex:1;min-width:0;min-height:36px;border:0;border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0 4px}
+.pseg button:hover:not(:disabled):not([aria-pressed="true"]){background:var(--panel-solid)}
+.pseg button[aria-pressed="true"]{background:var(--kc,var(--c0));color:#fff}
+.pseg button:disabled,.pauto:disabled{opacity:.45;cursor:default}
+.pseg button:focus-visible,.pauto:focus-visible{outline:2px solid var(--text);outline-offset:1px}
+.pauto{width:100%;min-height:38px;margin-top:10px;border:1.5px solid var(--kc,var(--c0));border-radius:10px;background:transparent;color:var(--text);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.pauto:hover:not(:disabled){background:var(--kc,var(--c0));color:#fff}
+.pcap.warn{color:var(--c3)}
 .ptip{position:absolute;left:0;top:0;pointer-events:none;background:var(--text);color:var(--panel-solid);font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-100%);z-index:2}
 .ptip[hidden]{display:none}
 /* the < place > switcher along the bottom */
@@ -1264,7 +1283,13 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
     unitShapes = [];
     (D.units[lv] || []).forEach(function (u, i) {
       var poly = L.polygon(u[4], unitStyle(u[0]));
-      poly.on("click", function (e) { L.DomEvent.stopPropagation(e); select(u[1] ? "u-" + lv + "-" + i : null, false, {lv: lv, i: i}); });
+      poly.on("click", function (e) {
+        L.DomEvent.stopPropagation(e);
+        var rid = u[1] ? "u-" + lv + "-" + i : null, sp = rid && registry[rid] ? registry[rid].crowd : null;
+        // a gym, food court, library or study area: zoom in and open its panel (not while picking a route)
+        if (FEATURES.crowd && sp && CAT_OF_TYPE[sp.type] && !dir.open) { openCat(CAT_OF_TYPE[sp.type], rid); return; }
+        select(rid, false, {lv: lv, i: i});
+      });
       unitShapes.push(poly);
       layers.units.addLayer(poly);
     });
@@ -1814,6 +1839,7 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
       var hr = hoursNow(s);
       h += '<div class="psec"><p class="pnote">' + esc(hr ? hr.text + ". " + hr.note + "." : "Opening hours aren't listed for this spot.") + "</p></div>";
     } else if (s) {
+      h += sensorBadge(s);
       h += '<div class="psec pnow" style="--cc:var(' + ci.col + ')"><i></i><div><b>' + esc(ci.lv < 0 ? "Closed" : ci.name + " now") + "</b><small>" + esc(ci.when) + "</small>" +
         (ci.hours ? "<small>" + esc((ci.lv >= 0 ? ci.hours.text + ". " : "") + ci.hours.note + ".") + "</small>" : "") + "</div></div>";
       if (crowdDb && crowdCanWrite && ci.lv >= 0) {
@@ -1825,7 +1851,7 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
       h += '<div class="psec"><h3>Popular times</h3><div class="pdays" role="tablist" aria-label="Day">' + [1, 2, 3, 4, 5, 6, 0].map(function (d) {
         return '<button role="tab" data-dow="' + d + '" aria-selected="' + (d === dow ? "true" : "false") + '">' + DAYS[d] + "</button>";
       }).join("") + "</div>" + popChart(s, dow) + "</div>";
-      h += peopleSection(s) + envSection(s) + roomSection(s);
+      h += peopleSection(s) + envSection(s) + roomSection(s) + controlSection(s);
     } else {
       h += '<div class="psec"><p class="pnote">' + esc(c.id === "wc" ? "Toilets here: " + (o.kinds || []).join(", ") + "." : c.id === "print" ? "Printing on " + levelName(o.lv) + (o.b ? " of " + o.b : "") + "." : (registry[o.id] || {}).sub || "") +
         (catList.length > 1 ? " Use the arrows at the bottom for the next nearest." : "") + "</p></div>";
@@ -1834,6 +1860,8 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
     $("place").scrollTop = keep;
     var rb = $("plBody").querySelectorAll(".preport button");
     for (var i = 0; i < rb.length; i++) { rb[i].onclick = function () { report(Number(this.dataset.p)); }; }
+    var cb = $("plBody").querySelectorAll(".pctl button");
+    for (var q = 0; q < cb.length; q++) { cb[q].onclick = function () { sendControl(s, this.dataset.cmd, this.dataset.val); }; }
     var db = $("plBody").querySelectorAll(".pdays button");
     for (var j = 0; j < db.length; j++) { db[j].onclick = function () { placeDow = Number(this.dataset.dow); renderPlace(); }; }
     wireCharts();
@@ -2527,7 +2555,8 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
     var hv = String(r.hvac || "").trim().toUpperCase();
     return {key: sp.key, fid: sp.fid, at: at, crowdAt: when("crowd_ts"), energyAt: when("energy_ts"), envAt: when("env_ts"),
             count: count, capacity: cap > 0 ? cap : null, pct: pct, status: String(r.crowd_status || "").trim().toUpperCase(),
-            light: onOff(r.light_on), fan: num(r.fan_pct), hvac: hv,
+            light: onOff(r.light_on), fan: num(r.fan_pct), hvac: hv === "MED" ? "MEDIUM" : hv,
+            bright: num(r.brightness), mode: String(r.mode || "").trim().toUpperCase(),
             temp: num(r.temperature), hum: num(r.humidity), comfort: String(r.comfort || "").trim().toUpperCase()};
   }
   function applyLive(list) {
@@ -2541,6 +2570,8 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
       if (prev) {
         if (r.count === null && r.pct === null && !r.status) { r.count = prev.count; r.capacity = r.capacity || prev.capacity; r.pct = prev.pct; r.status = prev.status; r.crowdAt = prev.crowdAt; }
         if (r.light === null && r.fan === null && !r.hvac) { r.light = prev.light; r.fan = prev.fan; r.hvac = prev.hvac; r.energyAt = prev.energyAt; }
+        if (r.bright === null) { r.bright = prev.bright; }
+        if (!r.mode) { r.mode = prev.mode; }
         if (r.temp === null && r.hum === null) { r.temp = prev.temp; r.hum = prev.hum; r.comfort = prev.comfort; r.envAt = prev.envAt; }
       }
       liveFac[r.key] = r;
@@ -2584,11 +2615,78 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
     }
     var fan = r.fan === null ? null : Math.max(0, Math.min(100, Math.round(r.fan)));
     var lvl = {OFF: 0, LOW: 1, MEDIUM: 2, HIGH: 3}[r.hvac];
+    var br = r.bright === null || r.bright === undefined ? null : Math.max(0, Math.min(100, Math.round(r.bright)));
     return h + '<div class="psys">' +
-      "<div" + (r.light ? ' class="on"' : "") + "><b>" + (r.light === null ? "–" : r.light ? "ON" : "OFF") + "</b><small>Lights (PIR)</small></div>" +
+      "<div" + (r.light ? ' class="on"' : "") + "><b>" + (r.light === null ? "–" : r.light ? "ON" : "OFF") + "</b><small>Lights (PIR)" + (br !== null && r.light !== false ? " · " + br + "% bright" : "") + "</small>" +
+        (br !== null && r.light !== false ? '<div class="bar"><i style="width:' + br + '%"></i></div>' : "") + "</div>" +
       "<div><b>" + (fan === null ? "–" : fan + "%") + "</b><small>Fan speed</small>" + (fan === null ? "" : '<div class="bar"><i style="width:' + fan + '%"></i></div>') + "</div>" +
       "<div><b>" + esc(r.hvac || "–") + "</b><small>HVAC level</small>" + (lvl === undefined ? "" : '<div class="bar"><i style="width:' + (lvl * 100 / 3).toFixed(0) + '%"></i></div>') + "</div>" +
       "</div>" + liveBadge(r, "energyAt") + "</div>";
+  }
+  // ---------- Member 1: sensor badge (W05) and student control panel (W09) ----------
+  // "live" = this facility's board posted in the last 2 min; "offline" = it has posted before but gone quiet
+  // (or the live data can't be reached); "none" = no board for this spot, so the map shows an estimate.
+  function sensorState(s) {
+    var r = s && liveFac[s.key];
+    if (!r) { return "none"; }
+    var newest = Math.max(r.crowdAt || 0, r.energyAt || 0, r.envAt || 0, r.at || 0);
+    return liveOnline() && Date.now() - newest <= LIVE_STALE ? "live" : "offline";
+  }
+  function sensorBadge(s) {
+    if (!(LIVE_API || liveState.mock)) { return ""; }
+    var st = sensorState(s), r = liveFac[s.key];
+    var txt = st === "live" ? (liveState.mock ? "Sensor connected (simulated data)" : "Sensor connected (live)")
+      : st === "offline" ? "Sensor offline, last reading " + hms(Math.max(r.crowdAt || 0, r.energyAt || 0, r.envAt || 0, r.at || 0))
+      : "No sensor, showing estimate";
+    return '<div class="psec psens ' + st + '"><span><i></i>' + esc(txt) + "</span></div>";
+  }
+  // Commands go out as MQTT topics sitg7/<facility ID>/cmd/light | brightness | hvac | mode (agreed in W01).
+  // This file only builds the buttons. The sender is Member 2's part (W10): define
+  //   window.sendCommand = function (facilityId, name, value, topic) { ...publish...; return true; }
+  // and every button press reaches it. Until then the panel says the command wasn't sent.
+  var CMD_ROOT = "sitg7";
+  var CMD_HOLD = 20e3;          // show the pressed button for 20 s while the board reports back
+  var ctl = {};                 // spot key -> {light, bright, hvac, mode, at, sent}
+  function ctlValue(s, k) {
+    var o = ctl[s.key], r = liveFac[s.key] || {}, live = r[k];
+    var has = live !== null && live !== undefined && live !== "";
+    if (o && o[k] !== undefined && (Date.now() - o.at < CMD_HOLD || !has)) { return o[k]; }
+    return has ? live : null;
+  }
+  function sendControl(s, name, value) {
+    if (!s || !s.fid || sensorState(s) !== "live") { return; }
+    var topic = CMD_ROOT + "/" + s.fid + "/cmd/" + name, sent = false;
+    try { sent = typeof window.sendCommand === "function" && window.sendCommand(s.fid, name, value, topic) !== false; } catch (e) { sent = false; }
+    var o = ctl[s.key] || (ctl[s.key] = {});
+    if (name === "light") { o.light = value === "ON"; }
+    if (name === "brightness") { o.bright = Number(value); o.light = true; }
+    if (name === "hvac") { o.hvac = value; }
+    o.mode = name === "mode" ? value : "MANUAL";
+    if (name === "mode" && value === "AUTO") { delete o.light; delete o.bright; delete o.hvac; }   // the board decides again
+    o.at = Date.now(); o.sent = sent; o.topic = topic; o.value = value;
+    try { document.dispatchEvent(new CustomEvent("sit-command", {detail: {facility: s.fid, name: name, value: value, topic: topic, sent: sent}})); } catch (e2) {}
+    renderPlace();
+  }
+  function ctlRow(label, cmd, opts, cur, off) {
+    return '<div class="prow"><small>' + label + '</small><div class="pseg" role="group" aria-label="' + label + '">' + opts.map(function (o) {
+      return '<button data-cmd="' + cmd + '" data-val="' + o[0] + '" aria-pressed="' + (cur === o[0] ? "true" : "false") + '"' + (off ? " disabled" : "") + ">" + o[1] + "</button>";
+    }).join("") + "</div></div>";
+  }
+  function controlSection(s) {
+    if (!s.fid || !(LIVE_API || liveState.mock) || !liveFac[s.key]) { return ""; }      // connected rooms only
+    var st = sensorState(s), off = st !== "live", o = ctl[s.key];
+    var light = ctlValue(s, "light"), bright = ctlValue(s, "bright"), hvac = ctlValue(s, "hvac"), mode = ctlValue(s, "mode") || "AUTO";
+    var manual = mode === "MANUAL";
+    var h = '<div class="psec pctl"><h3>Room controls<span class="pmode' + (manual ? " man" : "") + '">' + (manual ? "Manual mode" : "Auto mode") + "</span></h3>" +
+      ctlRow("Lights", "light", [["ON", "On"], ["OFF", "Off"]], light === null ? null : light ? "ON" : "OFF", off) +
+      ctlRow("Brightness", "brightness", [["25", "25%"], ["50", "50%"], ["75", "75%"], ["100", "100%"]], light === false || bright === null ? null : String(Math.round(bright)), off) +
+      ctlRow("HVAC", "hvac", [["OFF", "Off"], ["LOW", "Low"], ["MEDIUM", "Med"], ["HIGH", "High"]], hvac, off) +
+      '<button class="pauto" data-cmd="mode" data-val="AUTO"' + (off || !manual ? " disabled" : "") + ">Back to Auto</button>";
+    var note = off ? "Controls are off because this room's sensor isn't live."
+      : o && o.at && !o.sent ? "Not sent: the command link (MQTT) isn't connected on this page yet. Would publish " + o.topic + " = " + o.value + "."
+      : o && o.at && Date.now() - o.at < CMD_HOLD ? "Sent " + o.topic + " = " + o.value + " at " + hms(o.at) + "."
+      : manual ? "Stays in manual until you press Back to Auto." : "The room runs itself from its sensors. Press a button to take over.";
+    return h + '<p class="pcap' + (o && o.at && !o.sent && !off ? " warn" : "") + '">' + esc(note) + "</p></div>";
   }
   // a mock reply for testing and as a demo backup: data/mock_live.js sets window.SIT_MOCK_LIVE
   var mockTick = 0;
