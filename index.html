@@ -1,0 +1,3147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SIT Smart Campus Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	}
+.leaflet-container {
+	overflow: hidden;
+	}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	  -webkit-user-drag: none;
+	}
+.leaflet-tile::selection {
+	background: transparent;
+}
+.leaflet-safari .leaflet-tile {
+	image-rendering: -webkit-optimize-contrast;
+	}
+.leaflet-safari .leaflet-tile-container {
+	width: 1600px;
+	height: 1600px;
+	-webkit-transform-origin: 0 0;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	display: block;
+	}
+.leaflet-container .leaflet-overlay-pane svg {
+	max-width: none !important;
+	max-height: none !important;
+	}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto;
+	padding: 0;
+	}
+.leaflet-container img.leaflet-tile {
+	mix-blend-mode: plus-lighter;
+}
+.leaflet-container.leaflet-touch-zoom {
+	-ms-touch-action: pan-x pan-y;
+	touch-action: pan-x pan-y;
+	}
+.leaflet-container.leaflet-touch-drag {
+	-ms-touch-action: pinch-zoom;
+	touch-action: none;
+	touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+	-ms-touch-action: none;
+	touch-action: none;
+}
+.leaflet-container {
+	-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+	filter: inherit;
+	visibility: hidden;
+	}
+.leaflet-tile-loaded {
+	visibility: inherit;
+	}
+.leaflet-zoom-box {
+	width: 0;
+	height: 0;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	z-index: 800;
+	}
+.leaflet-overlay-pane svg {
+	-moz-user-select: none;
+	}
+.leaflet-pane         { z-index: 400; }
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+.leaflet-vml-shape {
+	width: 1px;
+	height: 1px;
+	}
+.lvml {
+	behavior: url(#default#VML);
+	display: inline-block;
+	position: absolute;
+	}
+.leaflet-control {
+	position: relative;
+	z-index: 800;
+	pointer-events: visiblePainted; 
+	pointer-events: auto;
+	}
+.leaflet-top,
+.leaflet-bottom {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	}
+.leaflet-top {
+	top: 0;
+	}
+.leaflet-right {
+	right: 0;
+	}
+.leaflet-bottom {
+	bottom: 0;
+	}
+.leaflet-left {
+	left: 0;
+	}
+.leaflet-control {
+	float: left;
+	clear: both;
+	}
+.leaflet-right .leaflet-control {
+	float: right;
+	}
+.leaflet-top .leaflet-control {
+	margin-top: 10px;
+	}
+.leaflet-bottom .leaflet-control {
+	margin-bottom: 10px;
+	}
+.leaflet-left .leaflet-control {
+	margin-left: 10px;
+	}
+.leaflet-right .leaflet-control {
+	margin-right: 10px;
+	}
+.leaflet-fade-anim .leaflet-popup {
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	   -moz-transition: opacity 0.2s linear;
+	        transition: opacity 0.2s linear;
+	}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+	opacity: 1;
+	}
+.leaflet-zoom-animated {
+	-webkit-transform-origin: 0 0;
+	    -ms-transform-origin: 0 0;
+	        transform-origin: 0 0;
+	}
+svg.leaflet-zoom-animated {
+	will-change: transform;
+}
+.leaflet-zoom-anim .leaflet-zoom-animated {
+	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+	}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+	-webkit-transition: none;
+	   -moz-transition: none;
+	        transition: none;
+	}
+.leaflet-zoom-anim .leaflet-zoom-hide {
+	visibility: hidden;
+	}
+.leaflet-interactive {
+	cursor: pointer;
+	}
+.leaflet-grab {
+	cursor: -webkit-grab;
+	cursor:    -moz-grab;
+	cursor:         grab;
+	}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+	cursor: crosshair;
+	}
+.leaflet-popup-pane,
+.leaflet-control {
+	cursor: auto;
+	}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+	cursor: move;
+	cursor: -webkit-grabbing;
+	cursor:    -moz-grabbing;
+	cursor:         grabbing;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+	pointer-events: none;
+	}
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+	pointer-events: visiblePainted; 
+	pointer-events: auto;
+	}
+.leaflet-container {
+	background: #ddd;
+	outline-offset: 1px;
+	}
+.leaflet-container a {
+	color: #0078A8;
+	}
+.leaflet-zoom-box {
+	border: 2px dotted #38f;
+	background: rgba(255,255,255,0.5);
+	}
+.leaflet-container {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	}
+.leaflet-bar {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	border-radius: 4px;
+	}
+.leaflet-bar a {
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar a:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar a:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar a.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+.leaflet-touch .leaflet-bar a {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar a:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar a:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font: bold 18px 'Lucida Console', Monaco, monospace;
+	text-indent: 1px;
+	}
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+	font-size: 22px;
+	}
+.leaflet-control-layers {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+	background: #fff;
+	border-radius: 5px;
+	}
+.leaflet-control-layers-toggle {
+	background-image: url(images/layers.png);
+	width: 36px;
+	height: 36px;
+	}
+.leaflet-retina .leaflet-control-layers-toggle {
+	background-image: url(images/layers-2x.png);
+	background-size: 26px 26px;
+	}
+.leaflet-touch .leaflet-control-layers-toggle {
+	width: 44px;
+	height: 44px;
+	}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	color: #333;
+	background: #fff;
+	}
+.leaflet-control-layers-scrollbar {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 5px;
+	}
+.leaflet-control-layers-selector {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	font-size: 13px;
+	font-size: 1.08333em;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	}
+.leaflet-default-icon-path { 
+	background-image: url(images/marker-icon.png);
+	}
+.leaflet-container .leaflet-control-attribution {
+	background: #fff;
+	background: rgba(255, 255, 255, 0.8);
+	margin: 0;
+	}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+	padding: 0 5px;
+	color: #333;
+	line-height: 1.4;
+	}
+.leaflet-control-attribution a {
+	text-decoration: none;
+	}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+	text-decoration: underline;
+	}
+.leaflet-attribution-flag {
+	display: inline !important;
+	vertical-align: baseline !important;
+	width: 1em;
+	height: 0.6669em;
+	}
+.leaflet-left .leaflet-control-scale {
+	margin-left: 5px;
+	}
+.leaflet-bottom .leaflet-control-scale {
+	margin-bottom: 5px;
+	}
+.leaflet-control-scale-line {
+	border: 2px solid #777;
+	border-top: none;
+	line-height: 1.1;
+	padding: 2px 5px 1px;
+	white-space: nowrap;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	background: rgba(255, 255, 255, 0.8);
+	text-shadow: 1px 1px #fff;
+	}
+.leaflet-control-scale-line:not(:first-child) {
+	border-top: 2px solid #777;
+	border-bottom: none;
+	margin-top: -2px;
+	}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+	border-bottom: 2px solid #777;
+	}
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	box-shadow: none;
+	}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	border: 2px solid rgba(0,0,0,0.2);
+	background-clip: padding-box;
+	}
+.leaflet-popup {
+	position: absolute;
+	text-align: center;
+	margin-bottom: 20px;
+	}
+.leaflet-popup-content-wrapper {
+	padding: 1px;
+	text-align: left;
+	border-radius: 12px;
+	}
+.leaflet-popup-content {
+	margin: 13px 24px 13px 20px;
+	line-height: 1.3;
+	font-size: 13px;
+	font-size: 1.08333em;
+	min-height: 1px;
+	}
+.leaflet-popup-content p {
+	margin: 17px 0;
+	margin: 1.3em 0;
+	}
+.leaflet-popup-tip-container {
+	width: 40px;
+	height: 20px;
+	position: absolute;
+	left: 50%;
+	margin-top: -1px;
+	margin-left: -20px;
+	overflow: hidden;
+	pointer-events: none;
+	}
+.leaflet-popup-tip {
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+	margin: -10px auto 0;
+	pointer-events: auto;
+	-webkit-transform: rotate(45deg);
+	   -moz-transform: rotate(45deg);
+	    -ms-transform: rotate(45deg);
+	        transform: rotate(45deg);
+	}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: white;
+	color: #333;
+	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+	}
+.leaflet-container a.leaflet-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: none;
+	text-align: center;
+	width: 24px;
+	height: 24px;
+	font: 16px/24px Tahoma, Verdana, sans-serif;
+	color: #757575;
+	text-decoration: none;
+	background: transparent;
+	}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+	color: #585858;
+	}
+.leaflet-popup-scrolled {
+	overflow: auto;
+	}
+.leaflet-oldie .leaflet-popup-content-wrapper {
+	-ms-zoom: 1;
+	}
+.leaflet-oldie .leaflet-popup-tip {
+	width: 24px;
+	margin: 0 auto;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+	}
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+	border: 1px solid #999;
+	}
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-interactive {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+@media print {
+	.leaflet-control {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		}
+	}
+</style>
+<style>
+/* Layout: full-screen map; a search bar and category chips on top; a side panel (desktop) or bottom sheet (phone) for
+   results, one place, or directions; level picker on the right. */
+:root{
+  --ground:#eef1f2; --panel:#fffffff2; --text:#2a3137; --muted:#66707a; --line:#e2e5ea;
+  --sit-red:#c8102e; --sit-blue:#2f5da8; --accent:#c8102e; --hl:#ffc629; --nel:#9900aa;
+  --road:#ffffff; --road-edge:#dde1e6; --water:#b7dcff;
+  --w-fill:#dfe7f5; --w-edge:#2f5da8; --e-fill:#f6e1e3; --e-edge:#c8102e; --jtc:#e4e6ea; --jtc-edge:#a3aab3;
+  --u-line:#9aa5b8; --u-cls:#dbe5f6; --u-lab:#e5f6dd; --u-off:#f7d2d0; --u-aud:#e7dbf4; --u-room:#fbf3e1;
+  --u-wc:#cbd5fb; --u-lift:#7168f2; --u-stair:#d6dbf3; --u-escal:#16191d; --u-hall:#cfb48e; --u-void:#e9eaee;
+  --esc-step:#5f6873; --esc-arrow:#ffc928; --landing:#8f98a3;
+  --u-green:#b9d6a3; --u-park:#f7f8fa; --u-svc:#e2e3e6;
+  --bridge:#e2362c; --bridge-edge:#8c1610; --bridge-label:#a3170f; --bridge-off:#2a3137; --bridge-off-edge:#000000;
+  --route:#1a6dff; --route-off:#7d8894; --route-casing:#ffffff; --go:#1f9d5c;
+  --c0:#1f9d5c; --c1:#c99700; --c2:#e8710a; --c3:#d93025; --cx:#8a939c; --tcool:#1a73e8; --thum:#8e44ad;
+  --shadow:0 10px 30px rgba(20,30,60,.12);
+  --panel-solid:#ffffff; --chip-on:#e8f0fe; --chip-on-text:#174ea6; --lift:0 1px 3px rgba(20,30,60,.22),0 2px 8px rgba(20,30,60,.1);
+  --k-study:#1a73e8; --k-lib:#8430ce; --k-food:#e8710a; --k-gym:#0b8a7d; --k-print:#3f51b5; --k-wc:#5f6368; --k-bike:#188038; --k-busy:#c8102e;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#171c22; --panel:#1f262eed; --text:#e6eaef; --muted:#98a2ad; --line:#2c343e;
+  --road:#2a313c; --road-edge:#20262f; --water:#2c5378;
+  --w-fill:#243550; --w-edge:#6f97dc; --e-fill:#47242a; --e-edge:#ef5a6f; --jtc:#252b33; --jtc-edge:#56606b;
+  --u-line:#56627a; --u-cls:#2c3a55; --u-lab:#26382a; --u-off:#5e2f2e; --u-aud:#3c2f55; --u-room:#3a3428;
+  --u-wc:#2c3866; --u-lift:#6a62e0; --u-stair:#353c56; --u-escal:#e3e6eb; --u-hall:#5a4430; --u-void:#262b33;
+  --esc-step:#8a929c; --esc-arrow:#c98a00; --landing:#6b737d;
+  --u-green:#2f4a2a; --u-park:#232934; --u-svc:#2b313b;
+  --bridge:#e04a3f; --bridge-edge:#5e0f0b; --bridge-label:#ff8f86; --bridge-off:#c9ced6; --bridge-off-edge:#8a929c; --nel:#a63cc4;
+  --route:#5b9bff; --route-off:#8b96a3; --route-casing:#0b0f14; --go:#34c27a;
+  --c0:#34c27a; --c1:#f2c230; --c2:#ff9142; --c3:#ff5a4e; --cx:#7b8590; --tcool:#7cacf8; --thum:#c58af9;
+  --panel-solid:#1f262e; --chip-on:#24395e; --chip-on-text:#a8c7fa; --lift:0 1px 3px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.3);
+  --k-study:#6ea4ff; --k-lib:#b98af0; --k-food:#ff9b52; --k-gym:#2fbfae; --k-print:#93a0ff; --k-wc:#a2abb5; --k-bike:#4fc47c; --k-busy:#ff5a6e;
+  --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --ground:#171c22; --panel:#1f262eed; --text:#e6eaef; --muted:#98a2ad; --line:#2c343e;
+  --road:#2a313c; --road-edge:#20262f; --water:#2c5378;
+  --w-fill:#243550; --w-edge:#6f97dc; --e-fill:#47242a; --e-edge:#ef5a6f; --jtc:#252b33; --jtc-edge:#56606b;
+  --u-line:#56627a; --u-cls:#2c3a55; --u-lab:#26382a; --u-off:#5e2f2e; --u-aud:#3c2f55; --u-room:#3a3428;
+  --u-wc:#2c3866; --u-lift:#6a62e0; --u-stair:#353c56; --u-escal:#e3e6eb; --u-hall:#5a4430; --u-void:#262b33;
+  --esc-step:#8a929c; --esc-arrow:#c98a00; --landing:#6b737d;
+  --u-green:#2f4a2a; --u-park:#232934; --u-svc:#2b313b;
+  --bridge:#e04a3f; --bridge-edge:#5e0f0b; --bridge-label:#ff8f86; --bridge-off:#c9ced6; --bridge-off-edge:#8a929c; --nel:#a63cc4;
+  --route:#5b9bff; --route-off:#8b96a3; --route-casing:#0b0f14; --go:#34c27a;
+  --c0:#34c27a; --c1:#f2c230; --c2:#ff9142; --c3:#ff5a4e; --cx:#7b8590; --tcool:#7cacf8; --thum:#c58af9;
+  --panel-solid:#1f262e; --chip-on:#24395e; --chip-on-text:#a8c7fa; --lift:0 1px 3px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.3);
+  --k-study:#6ea4ff; --k-lib:#b98af0; --k-food:#ff9b52; --k-gym:#2fbfae; --k-print:#93a0ff; --k-wc:#a2abb5; --k-bike:#4fc47c; --k-busy:#ff5a6e;
+  --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--text);font-family:var(--f-body);overflow:hidden}
+#map{position:fixed;inset:0;background:var(--ground)}
+.leaflet-container{background:var(--ground);font-family:var(--f-body)}
+.leaflet-control-attribution{background:var(--panel)!important;color:var(--muted)!important;font-size:10px}
+.leaflet-control-attribution a{color:var(--muted)!important}
+svg.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+
+.panel{position:fixed;background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:16px;box-shadow:var(--shadow);z-index:1000}
+
+/* top: search bar (menu, search, directions) and the category chips beside it */
+#top{position:fixed;top:16px;left:16px;right:16px;display:flex;gap:28px;align-items:flex-start;z-index:1002;pointer-events:none}
+#top>*{pointer-events:auto}
+#sbar{flex:none;width:392px;height:48px;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;border-radius:24px;background:var(--panel-solid);box-shadow:var(--lift)}
+#sbar input{flex:1;min-width:0;height:100%;border:0;background:transparent;color:var(--text);font:inherit;font-size:15px;padding:0 6px;outline:none}
+#sbar input::-webkit-search-cancel-button{display:none}
+#sbar .sep{width:1px;height:26px;background:var(--line);margin:0 4px;flex:none}
+.ib{width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
+.ib:hover{background:var(--ground);color:var(--text)}
+.ib[hidden]{display:none}
+#chipDir{color:var(--route)}
+#chipDir svg.ic{width:24px;height:24px}
+#chipDir[aria-pressed="true"]{background:var(--chip-on)}
+#cats{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;padding:6px 4px 10px;margin:0 -4px;scrollbar-width:none}
+#cats::-webkit-scrollbar{display:none}
+.cat{flex:none;display:flex;align-items:center;gap:6px;height:36px;padding:0 14px 0 11px;border:0;border-radius:18px;background:var(--panel-solid);color:var(--text);font:inherit;font-size:14px;cursor:pointer;box-shadow:var(--lift);white-space:nowrap}
+.cat svg.ic{width:18px;height:18px;color:var(--kc)}
+.cat:hover{background:var(--ground)}
+.cat[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-text)}
+.cat[aria-pressed="true"] svg.ic{color:var(--chip-on-text)}
+.cat[hidden],#sbar .sep[hidden]{display:none}
+
+/* the side panel: search results, a category, or directions. It collapses to the left like a drawer */
+#side{top:76px;left:16px;width:392px;max-height:calc(100% - 92px);display:flex;flex-direction:column;overflow:hidden;transition:transform .25s ease,opacity .2s}
+body.dirmode #side{top:16px;max-height:calc(100% - 32px)}
+body.dirmode #sbar{visibility:hidden}
+body:not(.panel-on) #side,body.collapsed #side{transform:translateX(calc(-100% - 24px));opacity:0;pointer-events:none}
+#collapse{position:fixed;z-index:1001;top:86px;left:408px;width:24px;height:48px;padding:0;border:0;border-radius:0 8px 8px 0;background:var(--panel-solid);color:var(--muted);box-shadow:2px 1px 4px rgba(20,30,60,.2);display:grid;place-items:center;cursor:pointer;transition:left .25s ease}
+#collapse:hover{color:var(--text)}
+body.dirmode #collapse{top:26px}
+body:not(.panel-on) #collapse,body.collapsed.dirmode #collapse{display:none}
+body.collapsed #collapse{left:0}
+body.collapsed #collapse svg{transform:rotate(180deg)}
+#dirMini{position:fixed;top:16px;left:16px;max-width:392px;display:flex;align-items:center;gap:2px;padding:4px;border-radius:24px;background:var(--panel-solid);box-shadow:var(--lift);z-index:1002}
+#dirMini[hidden]{display:none}
+#dirMiniOpen{display:flex;align-items:center;gap:8px;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;cursor:pointer;padding:4px 6px 4px 10px;border-radius:20px}
+#dirMiniOpen:hover{background:var(--ground)}
+#dirMiniOpen b{font-family:var(--f-display);font-size:21px;flex:none}
+#dirMiniOpen span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+#dirMiniOpen svg.ic{color:var(--muted)}
+#phead{display:flex;align-items:center;gap:12px;padding:14px 8px 12px 16px;border-bottom:1px solid var(--line);flex:none}
+#phead[hidden]{display:none}
+.pic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--kc);color:#fff;flex:none}
+.pic svg.ic{width:18px;height:18px}
+#phead>div{flex:1;min-width:0}
+#phead b{display:block;font-family:var(--f-display);font-size:23px;line-height:1.1}
+#phead small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+#list{overflow:auto;padding:6px 8px 8px;flex:1;min-height:0}
+.item{display:flex;gap:12px;align-items:center;padding:8px;border-radius:10px;cursor:pointer}
+.item:hover{background:var(--ground)}
+.item.active{background:var(--hl);color:#1b2333}
+.item>div{flex:1;min-width:0}
+.item small{display:block;color:var(--muted);font-size:11px}
+.item.active small{color:#5a4a1a}
+.tag{min-width:40px;height:30px;padding:0 6px;border-radius:5px;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:16px;color:#fff;flex:none}
+.tag.w{background:var(--sit-blue)}.tag.e{background:var(--sit-red)}.tag.br{background:var(--bridge)}.tag.rm{background:#4b5563;font-size:14px}
+.tag.nel{background:var(--nel);font-size:14px}.tag.poi{background:#7d879b;font-size:13px}.tag.esc{background:#16191d;font-size:13px}
+.kic{position:relative;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--kc);color:#fff;flex:none}
+.kic svg.ic{width:17px;height:17px}
+.kic em{position:absolute;right:-2px;top:-2px;width:12px;height:12px;border-radius:50%;background:var(--cc);border:2px solid var(--panel-solid)}
+.ilv{flex:none;font-family:var(--f-display);font-weight:700;font-size:15px;color:var(--muted)}
+.note{margin:6px 4px 8px;padding:8px 12px;border-radius:10px;background:var(--ground);font-size:12px;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 10px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--text);font:inherit;font-size:12px;padding:6px 10px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--panel);border-color:var(--text)}
+
+/* menu (☰): about, map options, colour key */
+#menu{top:72px;left:16px;width:330px;max-height:calc(100% - 88px);overflow:auto;z-index:1003;padding:4px 0 0}
+#menu[hidden]{display:none}
+.mhead{padding:12px 16px 8px}
+.mhead b{display:block;font-family:var(--f-display);font-size:27px;line-height:1.05}
+.mhead b span{color:var(--accent)}
+.mhead small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.mrow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;text-align:left;padding:11px 16px;cursor:pointer}
+.mrow:hover{background:var(--ground)}
+.sw{width:34px;height:20px;border-radius:10px;background:var(--line);position:relative;flex:none;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0004;transition:transform .2s}
+.mrow[aria-pressed="true"] .sw{background:var(--route)}
+.mrow[aria-pressed="true"] .sw::after{transform:translateX(14px)}
+.legend{border-top:1px solid var(--line);margin-top:4px;padding:12px 16px 14px;font-size:12px;color:var(--muted);display:flex;gap:6px 12px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid #0002}
+
+#floor{right:16px;top:72px;padding:8px 14px;font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1}
+#floor small{display:block;font-family:var(--f-body);font-size:12px;font-weight:400;color:var(--muted);margin-top:2px}
+#floors{right:16px;top:142px;display:flex;flex-direction:column;padding:6px;gap:4px;max-height:calc(100% - 142px - 172px);overflow-y:auto;scrollbar-width:none}
+#floors::-webkit-scrollbar{display:none}
+#floors button{flex:none;width:46px;height:34px;border:0;border-radius:6px;background:transparent;color:var(--text);font-family:var(--f-display);font-weight:700;font-size:20px;cursor:pointer}
+#floors button:hover{background:var(--ground)}
+#floors button.on{background:var(--accent);color:#fff}
+#zoom{right:16px;bottom:16px;display:flex;flex-direction:column;overflow:hidden}
+#zoom button{width:44px;height:44px;border:0;background:transparent;color:var(--text);font-size:20px;cursor:pointer}
+#zoom button:hover{background:var(--ground)}
+#zoom hr{margin:0;border:0;border-top:1px solid var(--line)}
+#locate{right:16px;bottom:162px;width:44px;height:44px;border:0;border-radius:12px;display:grid;place-items:center;color:var(--muted);cursor:pointer;padding:0}
+#locate:hover{color:var(--text)}
+#locate.on{color:var(--route)}
+#locate.busy svg{animation:gpsblink 1s ease-in-out infinite}
+@keyframes gpsblink{50%{opacity:.3}}
+#card{left:50%;bottom:16px;transform:translateX(-50%) translateY(150%);transition:transform .28s ease,opacity .2s,left .25s ease;opacity:0;visibility:hidden;padding:14px 18px;min-width:300px;max-width:min(560px,calc(100% - 32px));display:flex;gap:12px;align-items:center;pointer-events:none}
+body.panel-on:not(.collapsed) #card{left:calc(424px + (100% - 424px) / 2);max-width:min(560px,calc(100% - 456px))}
+#card.show{transform:translateX(-50%) translateY(0);pointer-events:auto;opacity:1;visibility:visible}
+#card b{font-size:16px}
+#card div small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+#status{left:50%;top:76px;transform:translateX(-50%);padding:8px 14px;font-size:13px;display:none}
+#status.on{display:block}
+button:focus-visible,#search:focus-visible,.item:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* map labels */
+.plate{display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none;transform:translate(-50%,-50%);width:max-content}
+.plate b{font-family:var(--f-display);font-weight:700;font-size:22px;color:#fff;padding:2px 8px;border-radius:5px;border:2px solid #fff;line-height:1.1;box-shadow:0 2px 6px #0003}
+.plate.w b{background:var(--sit-blue)}.plate.e b{background:var(--sit-red)}
+.plate span{font-size:12px;font-weight:700;color:var(--text);text-shadow:0 0 3px var(--ground),0 0 3px var(--ground),0 0 3px var(--ground)}
+.plate.small b{font-size:15px;padding:0 5px;opacity:.55}
+.plate.small span{display:none}
+.ulab{transform:translate(-50%,-50%);width:max-content;max-width:160px;text-align:center;font-weight:700;color:var(--text);line-height:1.05;pointer-events:none;text-shadow:0 0 2px var(--panel),0 0 2px var(--panel)}
+.mpoi{display:flex;align-items:center;gap:4px;transform:translate(-5px,-50%);width:max-content;font-size:11px;font-weight:700;color:var(--accent);pointer-events:none;text-shadow:0 0 2px var(--panel),0 0 2px var(--panel)}
+.mpoi i{width:8px;height:8px;border-radius:50%;background:var(--accent);border:1.5px solid #fff;flex:none}
+.jtcl{transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:var(--jtc-edge);pointer-events:none}
+.hkl{transform:translate(-50%,40%);width:max-content;font-size:12px;font-weight:700;color:#b5651d;pointer-events:none;text-shadow:0 0 3px var(--ground),0 0 3px var(--ground)}
+.roadl{transform:translate(-50%,-50%);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;white-space:nowrap;pointer-events:none}
+.brl{transform:translate(-50%,-50%);font-size:12px;font-weight:700;color:#fff;white-space:nowrap;pointer-events:none;text-shadow:0 0 2px #000,0 0 3px #000,0 1px 2px #000}
+.mrt{display:flex;flex-direction:column;align-items:center;gap:2px;transform:translate(-50%,-50%);width:max-content;pointer-events:none}
+.mrt b{background:var(--nel);color:#fff;font-family:var(--f-display);font-size:18px;padding:1px 10px;border-radius:999px;border:2px solid #fff}
+.mrt span{font-size:11px;font-weight:700;color:var(--text);text-shadow:0 0 3px var(--ground),0 0 3px var(--ground)}
+.gps{width:16px;height:16px;border-radius:50%;background:#2f5da8;border:3px solid #fff;box-shadow:0 0 0 8px #2f5da844}
+/* place pins: study spots, library, food, gyms (and a chosen category) */
+.apin{position:relative;display:flex;align-items:center;gap:5px;width:max-content;transform:translate(-14px,-14px);cursor:pointer}
+.apin i{width:28px;height:28px;border-radius:50%;background:var(--kc);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);display:grid;place-items:center;color:#fff;flex:none}
+.apin i svg.ic{width:15px;height:15px;stroke-width:2.2}
+.apin em{position:absolute;left:19px;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--cc);border:2px solid #fff}
+.apin span{font-size:12px;font-weight:700;color:var(--kc);line-height:1.1;max-width:170px;text-shadow:0 0 2px var(--panel-solid),0 0 2px var(--panel-solid),0 0 3px var(--panel-solid),0 0 4px var(--panel-solid)}
+.apin span b{font-family:var(--f-display);font-size:13px;color:var(--muted)}
+.apin span s{text-decoration:none;color:var(--cc)}
+.apin.off{opacity:.6}
+.apin.off i{transform:scale(.82)}
+.apin.nolab span{display:none}
+.apin:hover span{display:block}
+
+/* directions */
+#dir{padding:14px 12px 2px}
+#dir[hidden]{display:none}
+.dirhead{display:flex;align-items:center;justify-content:space-between;padding:0 0 8px}
+.dirhead b{font-family:var(--f-display);font-size:22px}
+.iconbtn{width:36px;height:36px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--text);font-size:16px;line-height:1;cursor:pointer;flex:none}
+.iconbtn:hover{background:var(--ground)}
+.dirbox{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 8px;align-items:center}
+.dirrow{grid-column:1;min-width:0;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--ground);cursor:text}
+.dirrow:focus-within{border-color:var(--route)}
+.dirrow input{flex:1;min-width:0;width:100%;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;padding:9px 0;outline:none}
+#dirSwap{grid-column:2;grid-row:1 / span 2}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.dot.a{background:var(--go)}.dot.b{background:var(--accent)}
+#dir .chips{padding:10px 0 2px}
+.dirsum{margin:6px 0 8px;padding:10px 12px;border-radius:10px;background:var(--ground);font-size:13px;line-height:1.35}
+.dirsum[hidden]{display:none}
+.dirsum b{font-family:var(--f-display);font-size:24px;margin-right:4px}
+.dirsum small{display:block;color:var(--muted);margin-top:3px}
+.dirsum .warn{color:var(--accent)}
+.steps{list-style:none;margin:0;padding:0 0 6px}
+.step{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:10px;cursor:pointer}
+.step:hover{background:var(--ground)}
+.step .sic{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--route);color:#fff;font-size:12px;font-weight:700;margin-top:1px}
+.step.a .sic{background:var(--go)}.step.b .sic{background:var(--accent)}.step.v .sic{background:#5b4bd6}
+.step div{flex:1;min-width:0;font-size:14px}
+.step small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+.step .slv{flex:none;font-family:var(--f-display);font-weight:700;font-size:15px;color:var(--muted)}
+.rpin{width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 5px #0007;transform:translate(-50%,-50%)}
+.rpin.a{background:var(--go)}.rpin.b{background:var(--accent)}
+.rchg{transform:translate(-50%,-140%);background:#5b4bd6;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;box-shadow:0 1px 4px #0005;width:max-content}
+.cacts{display:flex;gap:6px;margin-left:auto;flex:none}
+.cacts[hidden]{display:none}
+.cacts button{border:0;border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:var(--route);color:#fff;white-space:nowrap}
+.cacts button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+#card .cbody{min-width:0}
+
+/* crowd levels */
+#card{flex-wrap:wrap}
+#card .cbody{flex:1 1 160px}
+.ccrowd{flex-basis:100%;border-top:1px solid var(--line);padding-top:10px;font-size:13px}
+.ccrowd[hidden]{display:none}
+.cnow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cnow i{width:10px;height:10px;border-radius:50%;background:var(--cc);flex:none}
+.cnow span{color:var(--muted);font-size:12px}
+.chours{display:block;margin-top:4px;color:var(--muted);font-size:12px}
+.chours[hidden]{display:none}
+.creport{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.creport[hidden]{display:none}
+.creport small{color:var(--muted);font-size:12px;margin-right:2px}
+.creport button{border:1.5px solid var(--cc);background:transparent;color:var(--text);border-radius:999px;padding:5px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.creport button:hover{background:var(--cc);color:#fff}
+.tag.crowd{background:var(--cc);font-size:14px}
+.cgroup{display:flex;align-items:baseline;justify-content:space-between;padding:10px 8px 2px;font-family:var(--f-display);font-weight:700;font-size:17px}
+.cgroup small{font-family:var(--f-body);font-weight:400;font-size:11px;color:var(--muted)}
+.ckey{display:flex;gap:10px;flex-wrap:wrap;padding:6px 8px 4px;font-size:11px;color:var(--muted)}
+.ckey span{display:flex;align-items:center;gap:4px}
+.ckey i{width:9px;height:9px;border-radius:50%;background:var(--cc)}
+
+/* one place: name, crowd now, popular times, people count, temperature and humidity */
+#place{overflow:auto;flex:1;min-height:0;padding:0 0 10px}
+#place[hidden]{display:none}
+.phero{display:flex;align-items:flex-start;gap:12px;padding:16px 8px 4px 16px}
+.phero>div{flex:1;min-width:0}
+.phero b{display:block;font-family:var(--f-display);font-size:26px;line-height:1.05}
+.phero small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.pacts[hidden]{display:none}
+.pacts{display:flex;gap:8px;padding:8px 16px 12px;border-bottom:1px solid var(--line)}
+.pbtn{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--route);border-radius:18px;padding:7px 14px 7px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.pbtn.primary{background:var(--route);border-color:var(--route);color:#fff}
+.pbtn svg.ic{width:17px;height:17px}
+.pbtn:disabled{opacity:.45;cursor:default}
+.psec{padding:12px 16px;border-bottom:1px solid var(--line);position:relative}
+.psec:last-child{border-bottom:0}
+.psec h3{margin:0 0 8px;font-size:15px;font-weight:700}
+.pnow{display:flex;gap:10px;align-items:flex-start}
+.pnow>i{width:12px;height:12px;border-radius:50%;background:var(--cc);margin-top:5px;flex:none}
+.pnow b{font-size:16px}
+.pnow small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.preport small{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+.preport div{display:flex;gap:6px;flex-wrap:wrap}
+.preport button{border:1.5px solid var(--cc);background:transparent;color:var(--text);border-radius:999px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.preport button:hover{background:var(--cc);color:#fff}
+.pdays{display:flex;gap:2px;margin:0 0 10px}
+.pdays button{flex:1;min-width:0;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;padding:5px 0;cursor:pointer}
+.pdays button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--kc)}
+.pchart{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y}
+.pbase{stroke:var(--line);stroke-width:1}
+.pbar{fill:var(--kc)}
+.pbar.est{fill-opacity:.4}
+.pbar.now{stroke:var(--text);stroke-width:1.5}
+.paxis{font-size:10px;fill:var(--muted);text-anchor:middle;font-family:var(--f-body)}
+.plive{stroke:var(--text);stroke-width:2;stroke-linecap:round}
+.plivet{font-size:10px;font-weight:700;fill:var(--text);text-anchor:middle;font-family:var(--f-body)}
+.pline{fill:none;stroke:var(--kc);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.parea{fill:var(--kc);fill-opacity:.12}
+.pcapl{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}
+.pcapt{font-size:10px;fill:var(--muted);text-anchor:end;font-family:var(--f-body)}
+.pcross{stroke:var(--muted);stroke-width:1}
+.pdot{fill:var(--kc);stroke:var(--panel-solid);stroke-width:2}
+.pcap{margin:6px 0 0;font-size:11px;color:var(--muted);line-height:1.35}
+.pnote{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
+.pstat{font-size:13px;margin:-2px 0 8px;color:var(--muted)}
+.pstat b{font-family:var(--f-display);font-size:24px;color:var(--text);margin-right:2px}
+.ptiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ptiles>div{background:var(--ground);border-radius:10px;padding:10px 12px}
+.ptiles b{display:block;font-family:var(--f-display);font-size:28px;line-height:1}
+.ptiles small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.ptiles>div.tc{box-shadow:inset 4px 0 0 var(--tc)}
+.ptiles .tl{display:inline-block;margin-top:6px;font-size:11px;font-weight:600;color:var(--tc)}
+.psys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.psys>div{background:var(--ground);border-radius:10px;padding:9px 10px;min-width:0}
+.psys b{display:block;font-family:var(--f-display);font-size:20px;line-height:1.1}
+.psys small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.psys .on b{color:var(--c0)}
+.psys .bar{height:4px;border-radius:2px;background:var(--line,rgba(127,127,127,.25));margin-top:6px;overflow:hidden}
+.psys .bar i{display:block;height:100%;background:var(--kc,var(--c0))}
+.lbadge{display:flex;align-items:center;gap:6px;margin:8px 0 0;font-size:11px;color:var(--muted);line-height:1.35}
+.lbadge i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--c0)}
+.lbadge.off{color:var(--c3)} .lbadge.off i{background:var(--c3)}
+.ckey.tkey{padding:8px 0 0}
+.ptip{position:absolute;left:0;top:0;pointer-events:none;background:var(--text);color:var(--panel-solid);font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-100%);z-index:2}
+.ptip[hidden]{display:none}
+/* the < place > switcher along the bottom */
+#switcher{bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:4px;border-radius:26px;background:var(--panel-solid);box-shadow:var(--lift);max-width:calc(100% - 32px);z-index:1001;transition:left .25s ease}
+body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);max-width:calc(100% - 456px)}
+#switcher[hidden],#card.show ~ #switcher{display:none}
+#swName{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;cursor:pointer;padding:6px 10px;border-radius:20px}
+#swName:hover{background:var(--ground)}
+#swName b{font-size:15px;line-height:1.2;text-align:center}
+#swName small{color:var(--muted);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#switcher.measure #swName b{white-space:nowrap}
+.swdot{width:10px;height:10px;border-radius:50%;flex:none}
+#switcher .ib{color:var(--text)}
+#switcher .ib:disabled{opacity:.3;cursor:default;background:transparent}
+.apin.cur i{transform:scale(1.2);box-shadow:0 0 0 3px var(--panel-solid),0 2px 8px rgba(0,0,0,.4)}
+.apin.cur span{display:block}
+.cacts button[hidden]{display:none}
+
+#sheetHandle{display:none}
+@media (max-width:700px){
+  body{--topH:112px}
+  body.dirmode{--topH:12px}
+  #top{top:calc(10px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));flex-direction:column;gap:6px}
+  #sbar{width:100%}
+  #sbar input{font-size:16px}
+  #cats{flex:none;width:calc(100% + 20px);margin:0 -10px;padding:2px 10px 8px}
+  body.dirmode #top{display:none}
+  #collapse,#dirMini{display:none!important}
+  #side,body.dirmode #side{top:auto;left:0;right:0;bottom:0;width:auto;height:72vh;max-height:none;border-radius:18px 18px 0 0;opacity:1;pointer-events:auto;
+        padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);
+        transform:translateY(calc(72vh - var(--peek,120px)));transition:transform .28s ease}
+  #side.open{transform:translateY(0)}
+  body:not(.panel-on) #side{transform:translateY(105%);opacity:1;pointer-events:none}
+  #sheetHandle{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;border:0;background:transparent;padding:8px 0 4px;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;flex:none}
+  #sheetHandle i{width:40px;height:5px;border-radius:3px;background:var(--line)}
+  #phead{padding-top:4px}
+  #dir{padding-top:4px}
+  .dirrow input{font-size:16px;padding:10px 0}
+  .cacts{width:100%;margin-left:0}
+  .cacts button{flex:1;padding:10px 12px}
+  .item{min-height:52px}
+  #menu{top:calc(64px + env(safe-area-inset-top,0px));left:10px;right:10px;width:auto}
+  #floor{top:calc(var(--topH) + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));right:auto;padding:5px 10px;font-size:20px}
+  #floor small{display:none}
+  #zoom{top:calc(var(--topH) + 42px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));right:auto;bottom:auto}
+  #zoom #zin,#zoom #zout,#zoom hr{display:none}
+  #zoom button{width:40px;height:40px}
+  #locate{top:calc(var(--topH) + 88px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));right:auto;bottom:auto;width:40px;height:40px}
+  #floors{top:calc(var(--topH) + env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));padding:4px;gap:2px;max-height:calc(100% - var(--topH) - var(--sheetSpace,0px) - 24px - env(safe-area-inset-top,0px))}
+  #floors button{width:42px;height:34px;font-size:18px}
+  #card,body.panel-on:not(.collapsed) #card{left:10px;right:10px;min-width:0;max-width:none;transform:translateY(160%);bottom:calc(var(--sheetSpace,0px) + 10px)}
+  #card.show{transform:none}
+  body.sheet-open #card{opacity:0;pointer-events:none}
+  #status{top:calc(var(--topH) + 50px)}
+  .plate b{font-size:15px;padding:1px 5px}
+  .plate span{display:none}
+  .mrt b{font-size:14px}
+  .mrt span{display:none}
+  #switcher,body.panel-on:not(.collapsed) #switcher{left:10px;right:10px;transform:none;max-width:none;justify-content:space-between;bottom:calc(var(--sheetSpace,0px) + 10px)}
+  body.sheet-open #switcher{display:none}
+  .phero{padding-top:4px}
+}
+</style>
+
+<div id="map" role="application" aria-label="SIT Punggol campus map"></div>
+
+<div id="top">
+  <div id="sbar" role="search">
+    <button class="ib" id="menuBtn" data-ic="menu" aria-label="Menu and map options" aria-expanded="false" aria-controls="menu"></button>
+    <input id="search" type="search" placeholder="Search SIT Punggol" aria-label="Search a room, lab or building" autocomplete="off">
+    <button class="ib" id="searchClear" data-ic="close" aria-label="Clear search" hidden></button>
+    <button class="ib" id="searchGo" data-ic="search" aria-label="Search"></button>
+    <span class="sep"></span>
+    <button class="ib" id="chipDir" data-ic="dir" aria-pressed="false" aria-label="Directions" title="Directions"></button>
+  </div>
+  <div id="cats" role="toolbar" aria-label="Find on campus">
+    <button class="cat" id="chipCrowd" data-ic="busy" aria-pressed="false" style="--kc:var(--k-busy)">How busy</button>
+  </div>
+</div>
+
+<aside id="side" class="panel" aria-label="Results and directions">
+  <button id="sheetHandle" aria-label="Show or hide the list"><i></i><span id="sheetLabel">Show list</span></button>
+  <div id="dir" hidden>
+    <div class="dirhead"><b>Directions</b><button class="iconbtn" id="dirClose" aria-label="Close directions">✕</button></div>
+    <div class="dirbox">
+      <label class="dirrow"><i class="dot a"></i><input id="dirFrom" type="search" placeholder="Start: search a room or block" aria-label="Start" autocomplete="off"></label>
+      <label class="dirrow"><i class="dot b"></i><input id="dirTo" type="search" placeholder="Destination" aria-label="Destination" autocomplete="off"></label>
+      <button class="iconbtn" id="dirSwap" aria-label="Swap start and destination">⇅</button>
+    </div>
+    <div class="chips"><button class="chip" id="chipDry" aria-pressed="false">Avoid rain</button><button class="chip" id="chipFlat" aria-pressed="false">Step-free</button></div>
+    <div id="dirSum" class="dirsum" hidden></div>
+  </div>
+  <div id="phead" hidden><span class="pic" id="pheadIcon"></span><div><b id="pheadTitle"></b><small id="pheadSub"></small></div><button class="ib" id="pheadClose" data-ic="close" aria-label="Close"></button></div>
+  <div id="place" hidden>
+    <div class="phero"><span class="pic" id="plIcon"></span><div><b id="plName"></b><small id="plSub"></small></div><button class="ib" id="plClose" data-ic="close" aria-label="Close"></button></div>
+    <div class="pacts" id="plActs"><button class="pbtn primary" id="plGo" data-ic="go">Directions</button><button class="pbtn" id="plStart">Start here</button></div>
+    <div id="plBody"></div>
+  </div>
+  <div id="list"></div>
+</aside>
+<button id="collapse" data-ic="chevL" aria-label="Collapse side panel" aria-expanded="true" title="Collapse side panel"></button>
+<div id="dirMini" hidden><button id="dirMiniOpen" aria-label="Show directions"><b id="dirMiniTime"></b><span id="dirMiniText"></span></button><button class="ib" id="dirMiniClose" data-ic="close" aria-label="Close directions"></button></div>
+
+<div id="menu" class="panel" hidden>
+  <div class="mhead"><b><span>SIT</span> Punggol campus</b><small>Pick a level on the right and zoom in to see its rooms. Tap a room or a pin for details and directions.</small></div>
+  <button class="mrow" id="chipZones" aria-pressed="false">West / East zones<i class="sw"></i></button>
+  <button class="mrow" id="chipBridges" aria-pressed="false">Only this level's bridges<i class="sw"></i></button>
+  <div class="legend">
+    <span><i style="background:var(--u-cls)"></i>Classroom</span><span><i style="background:var(--u-lab)"></i>Lab</span>
+    <span><i style="background:var(--u-off)"></i>Office</span><span><i style="background:var(--u-aud)"></i>Hall</span>
+    <span><i style="background:var(--u-hall)"></i>Walkway</span><span><i style="background:var(--u-wc)"></i>Toilet</span>
+    <span><i style="background:var(--u-lift)"></i>Lift</span><span><i style="background:var(--u-escal)"></i>Escalator</span>
+    <span><i style="background:var(--bridge)"></i>Bridge on this level</span><span><i style="background:var(--bridge);opacity:.35"></i>Bridge on another level (see-through)</span>
+  </div>
+</div>
+
+<div id="floor" class="panel"><span id="floorName">Level 1</span><small id="floorSub">SIT Punggol</small></div>
+<div id="floors" class="panel" aria-label="Levels"></div>
+<div id="zoom" class="panel">
+  <button id="zin" aria-label="Zoom in">+</button><hr><button id="zout" aria-label="Zoom out">−</button><hr><button id="zfit" aria-label="Show the whole campus">⟲</button>
+</div>
+<button id="locate" class="panel" data-ic="locate" aria-label="Show my location" title="Show my location"></button>
+<div id="card" class="panel" role="status"><span class="tag e" id="cardTag">E2</span><div class="cbody"><b id="cardName"></b><small id="cardSub"></small></div>
+  <div class="cacts" id="cardActs" hidden><button id="goHere">Go here</button><button class="ghost" id="startHere">Start here</button><button class="ghost" id="cardMore" hidden>Details</button></div>
+  <div class="ccrowd" id="cardCrowd" hidden>
+    <div class="cnow"><i></i><b id="crowdLvl"></b><span id="crowdWhen"></span></div>
+    <small class="chours" id="crowdHours" hidden></small>
+    <div class="creport" id="crowdReport" hidden><small>How busy is it now?</small><button data-p="20" style="--cc:var(--c0)">Quiet</button><button data-p="50" style="--cc:var(--c1)">Moderate</button><button data-p="75" style="--cc:var(--c2)">Busy</button><button data-p="95" style="--cc:var(--c3)">Packed</button></div>
+  </div></div>
+<div id="switcher" class="panel" hidden>
+  <button class="ib" id="swPrev" data-ic="chevL" aria-label="Previous place"></button>
+  <button id="swName" aria-label="Show the whole list"><i class="swdot" id="swDot"></i><b id="swTitle"></b><small id="swCount"></small></button>
+  <button class="ib" id="swNext" data-ic="chevR" aria-label="Next place"></button>
+</div>
+<div id="status" class="panel">Loading floor plans…</div>
+
+<script src="data/sit_floors.js"></script>
+<script src="data/sit_extras.js"></script>
+<script src="data/sit_graph.js"></script>
+<script src="data/mock_live.js"></script>
+<script src="leaflet.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- helpers ----------
+  var $ = function (id) { return document.getElementById(id); };
+  function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function levelName(lv) { return lv === "B" ? "Basement" : "Level " + lv; }
+  function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+  function isPhone() { return window.innerWidth <= 700; }
+
+  var KIND = {
+    cls: ["--u-cls", "Classroom"], lab: ["--u-lab", "Lab"], off: ["--u-off", "Office"], aud: ["--u-aud", "Hall"],
+    room: ["--u-room", "Room"], wc: ["--u-wc", "Toilet"], lift: ["--u-lift", "Lift"], stair: ["--u-stair", "Stairs"],
+    escal: ["--u-escal", "Escalator"], hall: ["--u-hall", "Walkway"], void: ["--u-void", "Open to below"],
+    green: ["--u-green", "Garden"], park: ["--u-park", "Parking"], svc: ["--u-svc", "Service room"]
+  };
+
+  // ---------- map ----------
+  var canvas = L.canvas({padding: 0.4, tolerance: 3});
+  var map = L.map("map", {zoomControl: false, preferCanvas: true, renderer: canvas, minZoom: 15.5, maxZoom: 23,
+    zoomSnap: 0.25, zoomDelta: 0.5, wheelPxPerZoomLevel: 90, attributionControl: true});
+  map.attributionControl.setPrefix(false);
+  map.attributionControl.addAttribution("Floor plans: Point Maps SIT Visitor Map");
+  map.createPane("labels").style.zIndex = 650;
+  map.getPane("labels").style.pointerEvents = "none";
+  map.createPane("route").style.zIndex = 640;
+  map.getPane("route").style.pointerEvents = "none";
+  map.createPane("pins").style.zIndex = 655;     // place pins (clickable)
+  var routeSvg = L.svg({pane: "route", padding: 0.5});
+
+  var D = null, X = null;
+  var level = "1";
+  var ROOMS_ZOOM = 18.25, LABEL_ZOOM = 19.25;
+  var layers = {ground: L.layerGroup(), zones: L.layerGroup(), bldg: L.layerGroup(), units: L.layerGroup(),
+                bridges: L.layerGroup(), extras: L.layerGroup(), plates: L.layerGroup(), labels: L.layerGroup()};
+  var unitShapes = [];      // [{layer, data}] for the current level
+  var selected = null;
+  var registry = {};        // search id -> entry
+  var showZones = false, levelBridgesOnly = false;
+  var GR = null;            // walking network for directions (data/sit_graph.json)
+  // ---------- which parts this copy runs ----------
+  //   directions: walking routes, Avoid rain / Step-free (loads data/sit_graph.json)
+  //   crowd:      How busy, popular times, doorway counters on ThingSpeak, temperature and humidity
+  // Turn both on to run the whole app.
+  var FEATURES = {directions: true, crowd: true};
+  // data comes from data/*.js when this copy was opened as a file (double-click), else from the .json files
+  function getJSON(name, url) {
+    var pre = window.SIT_DATA && window.SIT_DATA[name];
+    if (pre) { return Promise.resolve(pre); }
+    return fetch(url).then(function (r) { if (!r.ok) { throw new Error(r.status); } return r.json(); });
+  }
+  function crowdOf(s) { return FEATURES.crowd && s ? crowdInfo(s) : null; }
+  var cardId = null;        // registry id shown on the card, when it can be routed to
+  var yLabel = null;        // the label on the Y bridge's stem (hidden on level 2, where the file labels the deck)
+
+  // ---------- styles ----------
+  function unitStyle(k) {
+    return {renderer: canvas, color: tok("--u-line"), weight: 0.6, fillColor: tok(KIND[k][0]), fillOpacity: 1,
+            dashArray: k === "void" ? "3 3" : null};
+  }
+  function bldStyle(zone, z) {
+    var inside = z >= ROOMS_ZOOM;
+    return {renderer: canvas, color: tok(zone === "w" ? "--w-edge" : "--e-edge"), weight: inside ? 2 : 1.6,
+            fillColor: tok(zone === "w" ? "--w-fill" : "--e-fill"), fillOpacity: inside ? 0 : 1, interactive: !inside};
+  }
+  // a bridge is solid red on its own level and see-through red on every other level;
+  // the level 2 Landbridge footpath is drawn as a walkway (path colour), see-through off its level
+  function bridgeStyle(onLevel, isPath) {
+    if (isPath) {
+      return {renderer: canvas, color: tok("--u-line"), weight: 0.8, fillColor: tok("--u-hall"),
+              fillOpacity: onLevel ? 1 : 0.3, opacity: onLevel ? 1 : 0.3};
+    }
+    return {renderer: canvas, color: tok("--bridge-edge"), weight: 1.2, fillColor: tok("--bridge"),
+            fillOpacity: onLevel ? 1 : 0.3, opacity: onLevel ? 1 : 0.35};
+  }
+  var HL = {fillColor: "#ffc629", fillOpacity: 1};
+
+  // ---------- data ----------
+  function rings(r) { return r; }   // [[[lat,lon],...], holes...] per polygon
+  function boundsOfAll() {
+    var b = L.latLngBounds([]);
+    for (var k in D.buildings) { b.extend(D.buildings[k].ring); }
+    return b;
+  }
+
+  function drawStatic() {
+    // ground: roads, pond, road names, JTC, zones, MRT, escalators, extra bridges
+    var hawkerBox = null, escGroup = null;
+    escDeco = [];
+    X.features.forEach(function (f) { if (f.properties.kind === "hawker") { hawkerBox = L.geoJSON(f).getBounds(); } });
+    X.features.forEach(function (f) {
+      var p = f.properties, g = f.geometry;
+      if (p.kind === "road") {
+        layers.ground.addLayer(L.geoJSON(f, {style: {renderer: canvas, color: tok("--road-edge"), weight: 1, fillColor: tok("--road"), fillOpacity: 1, interactive: false}}));
+      } else if (p.kind === "water") {
+        layers.ground.addLayer(L.geoJSON(f, {style: {renderer: canvas, color: "#ffffff", weight: 1.5, fillColor: tok("--water"), fillOpacity: 1, interactive: false}}));
+      } else if (p.kind === "roadname") {
+        var ll = [g.coordinates[1], g.coordinates[0]];
+        layers.labels.addLayer(L.marker(ll, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null,
+          html: '<div class="roadl" style="transform:translate(-50%,-50%) rotate(' + p.rot + 'deg)">' + p.name + "</div>"})}));
+      } else if (p.kind === "jtc") {
+        var j = L.geoJSON(f, {style: {renderer: canvas, color: tok("--jtc-edge"), weight: 1.2, dashArray: "6 5", fillColor: tok("--jtc"), fillOpacity: 1}});
+        j.on("click", function () { showCard("poi", "JTC", "JTC building", "Punggol Digital District, not part of SIT"); });
+        layers.ground.addLayer(j);
+        var c = j.getBounds().getCenter();
+        if (!(hawkerBox && hawkerBox.contains(c))) {        // the hawker centre's own label goes there
+          layers.labels.addLayer(L.marker(c, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null, html: '<div class="jtcl">JTC</div>'})}));
+        }
+      } else if (p.kind === "hawker") {
+        var hst = {renderer: canvas, color: "#d9822b", weight: 1.6, fillColor: tok("--u-room"), fillOpacity: 0.95};
+        var hk = L.geoJSON(f, {style: hst});
+        registry.hawker = {id: "hawker", tag: "poi", code: "HC", name: p.name, sub: p.note, ll: hk.getBounds().getCenter(), lv: null, layer: hk, restore: hst};
+        hk.on("click", function () { select("hawker"); });
+        layers.ground.addLayer(hk);
+        layers.labels.addLayer(L.marker(hk.getBounds().getCenter(), {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null,
+          html: '<div class="hkl">Punggol Coast Hawker Centre</div>'})}));
+      } else if (p.kind === "zone") {
+        layers.zones.addLayer(L.geoJSON(f, {style: {renderer: canvas, color: tok(p.zone === "w" ? "--w-edge" : "--e-edge"), weight: 2.5, dashArray: "10 7",
+          fillColor: tok(p.zone === "w" ? "--w-fill" : "--e-fill"), fillOpacity: 0.35, interactive: false}}));
+      } else if (p.kind === "bridge") {
+        var br = L.geoJSON(f, {style: bridgeStyle(true)});
+        var id = "x-" + p.name;
+        registry[id] = {id: id, tag: "br", code: "L" + p.level, name: p.name, sub: p.note.indexOf("Level") === 0 ? p.note : "Level " + p.level + ". " + p.note, ll: br.getBounds().getCenter(), lv: p.level, layer: br};
+        br.on("click", function (ev) { L.DomEvent.stopPropagation(ev); select(id, false, null, true); });
+        layers.bridges.addLayer(br);
+      } else if (p.kind === "escalator") {
+        // both escalators are one stop: tapping either highlights the pair
+        var es = L.geoJSON(f, {style: {renderer: canvas, color: "#000", weight: 0.6, fillColor: tok("--u-escal"), fillOpacity: 1}});
+        if (!escGroup) { escGroup = L.featureGroup(); registry.esc = {id: "esc", tag: "esc", code: "ESC", name: p.name, sub: p.note, lv: null, layer: escGroup}; }
+        escGroup.addLayer(es);
+        registry.esc.ll = escGroup.getBounds().getCenter();
+        es.on("click", function () { select("esc"); });
+        layers.extras.addLayer(es);
+      } else if (p.kind === "landing") {       // the few steps between the two escalators
+        var ld = L.geoJSON(f, {style: {renderer: canvas, color: tok("--u-escal"), weight: 0.8, fillColor: tok("--landing"), fillOpacity: 1}});
+        ld.on("click", function () { select("esc"); });
+        layers.extras.addLayer(ld);
+      } else if (p.kind === "escsteps" || p.kind === "escarrow") {     // step lines, and arrows pointing down to L2
+        var dl = L.geoJSON(f, {style: p.kind === "escsteps" ? {renderer: canvas, color: tok("--esc-step"), weight: 1, interactive: false}
+          : {renderer: canvas, color: tok("--esc-arrow"), weight: 2.6, lineCap: "round", lineJoin: "round", interactive: false}});
+        escDeco.push(dl);
+        layers.extras.addLayer(dl);
+      } else if (p.kind === "mrt") {
+        var m = [g.coordinates[1], g.coordinates[0]];
+        layers.labels.addLayer(L.marker(m, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null,
+          html: '<div class="mrt"><span>Punggol Coast MRT</span><b>' + p.code + "</b><span>" + p.line + "</span></div>"})}));
+        registry.mrt = {id: "mrt", tag: "nel", code: p.code, name: p.name, sub: p.line + ". At B1 of Punggol Coast Mall: walk in from W1 Level 1, or from Campus Boulevard (L2)", ll: L.latLng(m), lv: null};
+      }
+    });
+
+    // buildings
+    for (var bid in D.buildings) {
+      (function (bid) {
+        var b = D.buildings[bid];
+        var poly = L.polygon(b.ring, bldStyle(b.zone, map.getZoom()));
+        poly.on("click", function () { select("b-" + bid); });
+        layers.bldg.addLayer(poly);
+        registry["b-" + bid] = {id: "b-" + bid, tag: b.zone, code: bid, name: b.name, sub: (b.zone === "w" ? "West campus" : "East campus") + ", block " + bid,
+                                ll: L.latLng(b.label), lv: null, layer: poly, zone: b.zone, building: true, blk: bid};
+        var plate = L.marker(b.label, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null,
+          html: '<div class="plate ' + b.zone + '"><b>' + bid + "</b>" + (b.zone === "e" ? "<span>" + b.name + "</span>" : "") + "</div>"})});
+        plate.bid = bid;
+        layers.plates.addLayer(plate);
+      })(bid);
+    }
+
+    // bridges from the data (all levels)
+    D.bridges.forEach(function (br) {
+      var isPath = br.id === "l2path" || br.id === "boulevard";
+      var poly = L.polygon(br.rings, bridgeStyle(true, isPath));
+      var id = "br-" + br.id;
+      registry[id] = {id: id, tag: isPath ? "rm" : "br", code: "L" + br.lv, name: br.name, sub: br.sub + (br.ends.length ? ". Joins " + br.ends.join(" and ") : ""),
+                      ll: poly.getBounds().getCenter(), lv: br.lv, layer: poly, bridge: br, path: isPath};
+      poly.on("click", function (ev) { L.DomEvent.stopPropagation(ev); select(id, false, null, true); });
+      layers.bridges.addLayer(poly);
+      if (br.id === "l2path") { registry[id].ll = L.latLng(1.414395, 103.91150); }
+      if (br.id === "landbridge") {
+        // label sits on the stem over New Punggol Rd, not the middle of the Y
+        registry[id].ll = L.latLng(1.414395, 103.91150);
+        yLabel = L.marker(registry[id].ll, {pane: "labels", interactive: false,
+          icon: L.divIcon({className: "", iconSize: null, html: '<div class="brl">Y bridge</div>'})});
+        layers.labels.addLayer(yLabel);
+      }
+    });
+
+    // search entries: named rooms and points of interest on every level
+    D.levels.forEach(function (lv) {
+      D.units[lv].forEach(function (u, i) {
+        if (!u[1]) { return; }
+        var id = "u-" + lv + "-" + i;
+        registry[id] = {id: id, tag: "rm", code: lv === "B" ? "B" : "L" + lv, name: u[1], sub: [u[2], KIND[u[0]][1], u[3], levelName(lv)].filter(Boolean).join(", "),
+                        ll: L.latLng(u[5] || u[4][0][0][0]), lv: lv, unit: i, blk: u[3]};
+      });
+      (D.pois[lv] || []).forEach(function (p, i) {
+        var id = "p-" + lv + "-" + i;
+        registry[id] = {id: id, tag: "poi", code: lv === "B" ? "B" : "L" + lv, name: p[0], sub: [p[1], p[4], levelName(lv)].join(", ") + (p[5] ? ". " + p[5] : ""),
+                        ll: L.latLng(p[2], p[3]), lv: lv, blk: p[4]};
+      });
+    });
+
+    resolveSpots();
+    layers.ground.addTo(map); layers.bldg.addTo(map); layers.units.addTo(map);
+    layers.bridges.addTo(map); layers.extras.addTo(map); layers.plates.addTo(map); layers.labels.addTo(map);
+  }
+
+  // ---------- level ----------
+  function drawLevel(lv) {
+    level = lv;
+    layers.units.clearLayers();
+    unitShapes = [];
+    (D.units[lv] || []).forEach(function (u, i) {
+      var poly = L.polygon(u[4], unitStyle(u[0]));
+      poly.on("click", function (e) { L.DomEvent.stopPropagation(e); select(u[1] ? "u-" + lv + "-" + i : null, false, {lv: lv, i: i}); });
+      unitShapes.push(poly);
+      layers.units.addLayer(poly);
+    });
+    restyleBridges();
+    orderLayers();
+    // on level 2 the floor plans already label this deck "Landbridge", so the Y bridge label steps aside
+    if (yLabel) { yLabel.setIcon(L.divIcon({className: "", iconSize: null, html: lv === "2" ? "" : '<div class="brl">Y bridge</div>'})); }
+    var bs = $("floors").querySelectorAll("button");
+    for (var i = 0; i < bs.length; i++) {
+      var on = bs[i].dataset.lv === lv;
+      bs[i].classList.toggle("on", on);
+      bs[i].setAttribute("aria-pressed", on ? "true" : "false");
+      if (on) { bs[i].scrollIntoView({block: "nearest", inline: "nearest"}); }
+    }
+    $("floorName").textContent = levelName(lv);
+    updateZoomState();
+    drawCrowd();
+    drawLabels();
+    styleRoute();
+    store("sitwf-level", lv);
+  }
+  function restyleBridges() {
+    layers.bridges.eachLayer(function (l) {
+      var e = null;
+      for (var k in registry) { if (registry[k].layer === l) { e = registry[k]; break; } }
+      var on = !e || !e.lv || e.lv === level;
+      if (levelBridgesOnly && !on) { l.setStyle({fillOpacity: 0, opacity: 0}); return; }
+      l.setStyle(bridgeStyle(on, e && e.path));
+    });
+  }
+  // Paint order (one canvas, so order = order of drawing): roads and ground stay at the bottom; bridges
+  // on lower levels next, under this level's buildings and rooms; then this level's bridges and the
+  // escalators; bridges on higher levels last, see-through on top, since they pass over this level.
+  function front(l) { if (l.bringToFront) { l.bringToFront(); } }
+  function orderLayers() {
+    // a bridge below this level goes under its rooms; one above it (a higher structure) goes over them,
+    // see-through, and can still be clicked to highlight it
+    var on = [], below = [], above = [];
+    layers.bridges.eachLayer(function (l) {
+      var e = null;
+      for (var k in registry) { if (registry[k].layer === l) { e = registry[k]; break; } }
+      if (!e || !e.lv || e.lv === level) { on.push(l); }
+      else if (LV_ORDER.indexOf(e.lv) > LV_ORDER.indexOf(level)) { above.push(l); }
+      else { below.push(l); }
+    });
+    below.forEach(front);
+    layers.bldg.eachLayer(front);
+    if (map.hasLayer(layers.units)) { layers.units.eachLayer(front); }
+    on.forEach(front);
+    layers.extras.eachLayer(front);
+    above.forEach(front);
+    if (selected && selected.layer) { front(selected.layer); }
+  }
+
+  // ---------- zoom-dependent display ----------
+  function updateZoomState() {
+    var z = map.getZoom();
+    var inside = z >= ROOMS_ZOOM;
+    layers.bldg.eachLayer(function (l) {
+      var bid = null;
+      for (var k in registry) { if (registry[k].layer === l) { bid = registry[k]; break; } }
+      l.setStyle(bldStyle(bid ? bid.zone : "w", z));
+    });
+    if (inside && !map.hasLayer(layers.units)) {
+      layers.units.addTo(map);
+      orderLayers();
+    }
+    if (!inside && map.hasLayer(layers.units)) { map.removeLayer(layers.units); }
+    layers.plates.eachLayer(function (m) {
+      var el = m.getElement();
+      if (el && el.firstChild) { el.firstChild.classList.toggle("small", z >= LABEL_ZOOM - 0.5); }
+    });
+    restyleBridges();
+    $("floorSub").textContent = inside ? "Rooms shown" : "Zoom in to see rooms";
+  }
+
+  var labelLayer = L.layerGroup();
+  function metresPerPx() {
+    var z = map.getZoom(), lat = map.getCenter().lat;
+    return 40075016.686 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z + 8);
+  }
+  function drawLabels() {
+    labelLayer.clearLayers();
+    var z = map.getZoom();
+    if (z < LABEL_ZOOM) { return; }
+    var b = map.getBounds().pad(0.1), mpp = metresPerPx();
+    var placed = [];
+    function free(pt, w, h) {
+      var r = [pt.x - w / 2 - 2, pt.y - h / 2 - 1, pt.x + w / 2 + 2, pt.y + h / 2 + 1];
+      for (var i = 0; i < placed.length; i++) {
+        var q = placed[i];
+        if (r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1]) { return false; }
+      }
+      placed.push(r); return true;
+    }
+    var cand = [];
+    (D.units[level] || []).forEach(function (u, i) {
+      if (!u[1] || !u[5] || pinned["u-" + level + "-" + i]) { return; }
+      var ll = L.latLng(u[5]);
+      if (!b.contains(ll)) { return; }
+      var wpx = u[6][0] / mpp, lpx = u[6][1] / mpp;
+      var fs = Math.min(14, lpx / Math.max(4, u[1].length) * 1.5, wpx * 0.55);
+      if (fs < 7.5) { return; }
+      cand.push({ll: ll, fs: fs, text: u[1], max: Math.max(40, lpx * 0.95), area: wpx * lpx});
+    });
+    cand.sort(function (a, c) { return c.area - a.area; });
+    cand.forEach(function (c) {
+      var pt = map.latLngToContainerPoint(c.ll);
+      var w = Math.min(c.max, c.text.length * c.fs * 0.56), lines = Math.ceil(c.text.length * c.fs * 0.56 / c.max);
+      if (!free(pt, w, c.fs * 1.15 * Math.max(1, lines))) { return; }
+      labelLayer.addLayer(L.marker(c.ll, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null,
+        html: '<div class="ulab" style="font-size:' + c.fs.toFixed(1) + 'px;max-width:' + c.max.toFixed(0) + 'px">' + esc(c.text) + "</div>"})}));
+    });
+    (D.pois[level] || []).forEach(function (p, i) {
+      if (pinned["p-" + level + "-" + i]) { return; }
+      var ll = L.latLng(p[2], p[3]);
+      if (!b.contains(ll)) { return; }
+      var pt = map.latLngToContainerPoint(ll);
+      var w = 12 + p[0].length * 6.2;
+      if (!free(L.point(pt.x - 5 + w / 2, pt.y), w, 14)) { return; }
+      labelLayer.addLayer(L.marker(ll, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null,
+        html: '<div class="mpoi"><i></i>' + esc(p[0]) + "</div>"})}));
+    });
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; }); }
+
+  // ---------- selection ----------
+  function clearSelection() {
+    cardId = null; $("cardActs").hidden = true; showCrowdCard(null);
+    if (selected && selected.layer) {
+      if (selected.restore) { selected.layer.setStyle(selected.restore); }
+    }
+    selected = null;
+    decoFront();
+    if (crowdMode) { tintCrowd(); }
+    $("card").classList.remove("show");
+    var a = $("list").querySelectorAll(".item.active");
+    for (var i = 0; i < a.length; i++) { a[i].classList.remove("active"); }
+  }
+  function showCard(tag, code, name, sub) {
+    var t = $("cardTag");
+    t.className = "tag " + tag; t.textContent = code;
+    $("cardName").textContent = name; $("cardSub").textContent = sub;
+    $("card").classList.add("show");
+  }
+  var escDeco = [];          // escalator step lines and arrows, kept above the escalators
+  function decoFront() { escDeco.forEach(function (l) { l.bringToFront(); }); }
+  function highlight(layer, restore) {
+    layer.setStyle(HL);
+    if (layer.bringToFront) { layer.bringToFront(); }
+    decoFront();
+    selected = {layer: layer, restore: restore};
+  }
+  function select(id, fly, raw, stay) {
+    clearSelection();
+    if (!id && raw) {   // unnamed unit
+      var u = D.units[raw.lv][raw.i];
+      highlight(unitShapes[raw.i], unitStyle(u[0]));
+      showCard("rm", raw.lv === "B" ? "B" : "L" + raw.lv, KIND[u[0]][1], [u[3], levelName(raw.lv)].join(", "));
+      return;
+    }
+    var e = registry[id];
+    if (!e) { return; }
+    if (!stay && e.lv && e.lv !== level && (e.unit !== undefined || id.indexOf("p-") === 0 || e.tag === "br" || e.path)) { drawLevel(e.lv); }
+    if (e.unit !== undefined) {
+      highlight(unitShapes[e.unit], unitStyle(D.units[e.lv][e.unit][0]));
+    } else if (e.layer && e.layer.setStyle) {
+      var st = e.restore ? e.restore : e.building ? bldStyle(e.zone, map.getZoom()) : (e.tag === "esc" ? {fillColor: tok("--u-escal")} : bridgeStyle(!e.lv || e.lv === level, e.path));
+      highlight(e.layer, st);
+    }
+    showCard(e.tag, e.code, e.name, e.sub);
+    cardId = GR && GR.t[id] ? id : null;
+    var more = !!(e.crowd && CAT_OF_TYPE[e.crowd.type]);
+    $("goHere").hidden = $("startHere").hidden = !cardId;
+    $("cardMore").hidden = !more;
+    $("cardActs").hidden = !cardId && !more;
+    showCrowdCard(e.crowd);
+    if (fly) {
+      var z = e.building ? 18.6 : (e.unit !== undefined || id.indexOf("p-") === 0 ? 20.3 : 19);
+      flyTo(e.ll, z);
+    }
+    var it = $("list").querySelector('[data-id="' + id + '"]');
+    if (it) { it.classList.add("active"); }
+  }
+  function flyTo(ll, z) {
+    // centre in the part of the screen not covered by the panel, the top bar or the sheet
+    var off = !isPhone() ? [-panelPx() / 2, -20] : [0, (sheetPx() - (view === "dir" ? 12 : 112)) / 2];
+    var target = map.unproject(map.project(ll, z).add(L.point(off[0], off[1])), z);
+    map.flyTo(target, z, {duration: 0.6});
+  }
+
+  // ---------- icons (one stroke style, drawn here) ----------
+  var ICONS = {
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    search: '<circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.2 15.2L20 20"/>',
+    close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+    dir: '<path d="M12 2.6l9.4 9.4-9.4 9.4L2.6 12z" fill="currentColor" stroke="none"/><path d="M9 15.2v-3.4h6M12.8 9.5l2.4 2.3-2.4 2.3" stroke="#fff"/>',
+    go: '<path d="M5 12h13M13 6.5l5.5 5.5-5.5 5.5"/>',
+    chevL: '<path d="M14.5 6l-6 6 6 6"/>',
+    chevR: '<path d="M9.5 6l6 6-6 6"/>',
+    busy: '<path d="M5 20v-5M10 20V9M15 20v-7M20 20V5"/>',
+    study: '<path d="M12 6.6C10.2 5.2 7.4 4.7 3.5 5.1v12.8c3.9-.4 6.7.1 8.5 1.5 1.8-1.4 4.6-1.9 8.5-1.5V5.1c-3.9-.4-6.7.1-8.5 1.5z"/><path d="M12 6.6v12.8"/>',
+    library: '<path d="M4.5 4.5h3.5v15H4.5zM10 4.5h3.5v15H10z"/><path d="M15.4 5.6l3.3-.9 3 14.5-3.3.9z"/>',
+    food: '<path d="M6.5 3v5.5a2.5 2.5 0 0 0 5 0V3M9 3v18"/><path d="M17.5 21V3c-2.4 1.1-3.4 3.6-3.4 6.8V14h3.4"/>',
+    gym: '<path d="M2.5 9.5v5M5.5 7v10M18.5 7v10M21.5 9.5v5M5.5 12h13"/>',
+    print: '<path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8.5" rx="2"/><path d="M7 13.5h10v7H7z"/>',
+    wc: '<circle cx="7.5" cy="4.6" r="1.7"/><path d="M5.6 21v-6.5H4.7l1.4-6h2.8l1.4 6h-.9V21"/><circle cx="16.5" cy="4.6" r="1.7"/><path d="M15 21v-6M18 21v-6M14.5 15V9.8c0-.8.5-1.3 1.3-1.3h1.4c.8 0 1.3.5 1.3 1.3V15"/>',
+    bike: '<circle cx="6" cy="16" r="3.6"/><circle cx="18" cy="16" r="3.6"/><path d="M6 16l3.4-6.5h6.2L18 16M9.4 9.5L12 16H6M15.6 9.5l-1.2-3h-2.2"/>',
+    locate: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+    train: '<rect x="6" y="3" width="12" height="13.5" rx="3"/><path d="M6 10.5h12M9 20.5l1.6-4M15 20.5l-1.6-4M9.2 13.4h.1M14.7 13.4h.1"/>'
+  };
+  function icon(n) { return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[n] || "") + "</svg>"; }
+  function paintIcons(root) {
+    var els = (root || document).querySelectorAll("[data-ic]");
+    for (var i = 0; i < els.length; i++) { if (!els[i].querySelector("svg.ic")) { els[i].insertAdjacentHTML("afterbegin", icon(els[i].dataset.ic)); } }
+  }
+  function bodyCls(c, on) { document.body.classList.toggle(c, !!on); }
+
+  // ---------- categories: the chips along the top ----------
+  // Food, Study spots, Library and Gym step through their places one at a time (< E4 Food Court >), with
+  // how busy each is; Printers and Toilets are the nearest on this level; MRT just shows the station.
+  var CATS = [
+    {id: "food", label: "Food", ic: "food", kc: "--k-food", types: ["food"]},
+    {id: "study", label: "Study spots", ic: "study", kc: "--k-study", types: ["study"]},
+    {id: "library", label: "Library", ic: "library", kc: "--k-lib", types: ["library"]},
+    {id: "gym", label: "Gym", ic: "gym", kc: "--k-gym", types: ["gym"]},
+    {id: "print", label: "Printers", ic: "print", kc: "--k-print", perLevel: true},
+    {id: "wc", label: "Toilets", ic: "wc", kc: "--k-wc", perLevel: true},
+    {id: "bike", label: "Bike racks", ic: "bike", kc: "--k-bike"},
+    {id: "mrt", label: "MRT", ic: "train", kc: "--nel", go: "mrt"}
+  ];
+  var CAT_OF_TYPE = {food: CATS[0], study: CATS[1], library: CATS[2], gym: CATS[3]};
+  var activeCat = null, catList = [], catIdx = 0, placeDow = null;
+  var view = "none";        // none | search | cat (a category's list) | place (one place) | crowd (How busy) | dir
+  function restrictedBlocks() { return (GR && GR.restricted) || ["E1"]; }
+  function catItems(c) {
+    var out = [];
+    if (c.types) {        // in the order listed in CROWD_SPOTS (the main one first)
+      CROWD_SPOTS.forEach(function (s) {
+        if (s.id && c.types.indexOf(s.type) >= 0) { out.push({id: s.id, name: s.label, ll: s.ll, lv: s.lv, b: (registry[s.id] || {}).blk, spot: s}); }
+      });
+      return out;
+    }
+    if (c.id === "bike") {
+      D.levels.forEach(function (lv) {
+        (D.pois[lv] || []).forEach(function (p, i) { if (/bicycle rack/i.test(p[0])) { out.push({id: "p-" + lv + "-" + i, name: p[0], ll: L.latLng(p[2], p[3]), lv: lv, b: p[4]}); } });
+      });
+    } else {
+      // printers and toilets on this level (not in staff-only blocks); toilets side by side are one stop
+      (D.units[level] || []).forEach(function (u, i) {
+        if (!u[1] || restrictedBlocks().indexOf(u[3]) >= 0) { return; }
+        var ok = c.id === "print" ? /print station|^printing$/i.test(u[1]) : u[0] === "wc" && / toilet$/i.test(u[1]);
+        if (!ok) { return; }
+        var ll = L.latLng(u[5] || u[4][0][0][0]), kind = u[1].replace(/ toilet$/i, "");
+        if (c.id === "wc") {
+          for (var j = 0; j < out.length; j++) {
+            if (out[j].ll.distanceTo(ll) < 15) { if (out[j].kinds.indexOf(kind) < 0) { out[j].kinds.push(kind); } return; }
+          }
+          out.push({id: "u-" + level + "-" + i, name: (u[3] ? u[3] + " toilets" : "Toilets"), ll: ll, lv: level, b: u[3], kinds: [kind]});
+        } else {
+          out.push({id: "u-" + level + "-" + i, name: u[1], ll: ll, lv: level, b: u[3]});
+        }
+      });
+    }
+    var ctr = map.getCenter();
+    out.sort(function (a, b) { return a.ll.distanceTo(ctr) - b.ll.distanceTo(ctr); });
+    return out;
+  }
+
+  // ---------- the panel's modes ----------
+  function setView(v) {
+    view = v;
+    bodyCls("panel-on", v !== "none");
+    bodyCls("dirmode", v === "dir");
+    bodyCls("collapsed", false);
+    $("collapse").setAttribute("aria-expanded", "true");
+    $("phead").hidden = !(v === "cat" || v === "crowd");
+    $("place").hidden = v !== "place";
+    $("list").hidden = v === "place";
+    $("dir").hidden = v !== "dir";
+    $("switcher").hidden = v !== "place";
+    $("dirMini").hidden = true;
+    if (v !== "place" && v !== "cat") { activeCat = null; }
+    if (v === "none" || v === "place") { setSheet(false); }
+    $("sheetLabel").textContent = $("side").classList.contains("open") ? "Hide" : v === "dir" ? "Show steps" : v === "place" ? "Show details" : "Show list";
+    syncModes();
+    setPeek();
+  }
+  function syncModes() {
+    var catOn = !!activeCat && (view === "place" || view === "cat");
+    CATS.forEach(function (c) { var b = $("cat-" + c.id); if (b) { b.setAttribute("aria-pressed", catOn && activeCat === c ? "true" : "false"); } });
+    $("chipCrowd").setAttribute("aria-pressed", view === "crowd" ? "true" : "false");
+    $("chipDir").setAttribute("aria-pressed", view === "dir" ? "true" : "false");
+    crowdMode = FEATURES.crowd && (view === "crowd" || (catOn && !!activeCat.types));
+    if (D && map._loaded) { tintCrowd(); drawPins(); drawLabels(); }
+  }
+  function closePanel() {
+    if (dir.open) { closeDir(true); }
+    clearSelection(); setView("none");
+  }
+  function setHead(ic, kc, title, sub) {
+    var p = $("pheadIcon");
+    p.style.setProperty("--kc", "var(" + kc + ")"); p.innerHTML = icon(ic);
+    $("pheadTitle").textContent = title; $("pheadSub").textContent = sub;
+  }
+  $("pheadClose").onclick = closePanel;
+  $("plClose").onclick = closePanel;
+
+  // ---------- one category: zoom to a place, < > to the next ----------
+  function openCat(c, startId) {
+    if (!D) { return; }
+    if (dir.open) { closeDir(true); }
+    $("search").value = ""; syncClear(); closeMenu();
+    if (c.go) { closePanel(); select(c.go, true); return; }
+    activeCat = c; catList = catItems(c); catIdx = 0; placeDow = null;
+    for (var i = 0; i < catList.length; i++) { if (catList[i].id === startId) { catIdx = i; } }
+    if (!catList.length) { setView("cat"); buildCatList(c); if (isPhone()) { setSheet(true); } return; }
+    showPlace(catIdx);
+  }
+  function showPlace(i) {
+    if (!catList.length) { return; }
+    catIdx = (i + catList.length) % catList.length;
+    var o = catList[catIdx];
+    setView("place");
+    select(o.id, false);
+    $("card").classList.remove("show");
+    placeHue(o);
+    renderPlace(); renderSwitcher(); setPeek();
+    // zoom in until the room fills the free part of the screen (beside the panel, above the < > bar)
+    var ll = o.ll, z = 20.5, lay = selected && selected.layer;
+    if (lay && lay.getBounds) {
+      var bb = lay.getBounds(), pad = isPhone() ? L.point(40, 112 + sheetPx() + 80) : L.point(panelPx() + 120, 76 + 90 + 60);
+      ll = bb.getCenter();
+      z = Math.max(19.75, Math.min(21.25, map.getBoundsZoom(bb, false, pad)));
+    }
+    flyTo(ll, z);
+  }
+  // the place's own room in its crowd colour, outlined (the other spots of the category are tinted too)
+  function placeHue(o) {
+    if (view !== "place" || !o || !o.spot || !selected || !selected.layer || !FEATURES.crowd) { return; }
+    selected.layer.setStyle({fillColor: tok(crowdInfo(o.spot).col), fillOpacity: 0.8, color: tok("--text"), weight: 2.5});
+  }
+  // The bar keeps one width while stepping through a category: wide enough for its longest name,
+  // so the arrows stay put. (On a phone it spans the screen and long names wrap onto two lines.)
+  var swKey = "";
+  function sizeSwitcher() {
+    var sw = $("switcher"), key = catList.map(function (o) { return o.name; }).join("|") + "@" + window.innerWidth;
+    if (isPhone()) { sw.style.width = ""; swKey = ""; return; }
+    if (key === swKey || !sw.getClientRects().length) { return; }      // not on screen yet: size it next time
+    var t = $("swTitle"), c = $("swCount"), keepT = t.textContent, keepC = c.textContent, w = 0;
+    sw.style.width = ""; sw.classList.add("measure");
+    c.textContent = catList.length > 1 ? catList.length + " of " + catList.length : "";
+    catList.forEach(function (o) { t.textContent = o.name; w = Math.max(w, sw.getBoundingClientRect().width); });
+    sw.classList.remove("measure");
+    t.textContent = keepT; c.textContent = keepC;
+    sw.style.width = Math.ceil(w + 2) + "px";
+    swKey = key;
+  }
+  function renderSwitcher() {
+    var o = catList[catIdx];
+    if (!o || !activeCat) { return; }
+    sizeSwitcher();
+    var ci = crowdOf(o.spot);
+    $("swTitle").textContent = o.name;
+    $("swCount").textContent = catList.length > 1 ? (catIdx + 1) + " of " + catList.length : "";
+    $("swDot").style.background = "var(" + (ci ? ci.col : activeCat.kc) + ")";
+    $("swPrev").disabled = $("swNext").disabled = catList.length < 2;
+  }
+  $("swPrev").onclick = function () { showPlace(catIdx - 1); };
+  $("swNext").onclick = function () { showPlace(catIdx + 1); };
+  $("swName").onclick = function () {
+    if (!activeCat) { return; }
+    clearSelection(); setView("cat"); buildCatList(activeCat);
+    if (isPhone()) { setSheet(true); }
+  };
+  function buildCatList(c) {
+    var list = $("list"), n = catList.length;
+    list.innerHTML = "";
+    setHead(c.ic, c.kc, c.label, n ? n + (n === 1 ? " place" : " places") + (c.perLevel ? " on " + levelName(level) + ", nearest first" : "") : "None on " + levelName(level));
+    catList.forEach(function (o, i) {
+      var ci = crowdOf(o.spot), hr = !ci && o.spot ? hoursNow(o.spot) : null, where = [o.b, o.lv ? levelName(o.lv) : null].filter(Boolean).join(" ");
+      var sub = ci ? ci.name + (ci.hours && ci.lv >= 0 ? " · " + ci.hours.text : "") + (where ? " · " + where : "")
+        : [o.kinds ? o.kinds.join(", ") : null, hr ? hr.text : null, where].filter(Boolean).join(" · ");
+      var d = document.createElement("div");
+      d.className = "item"; d.tabIndex = 0; d.dataset.id = o.id;
+      d.innerHTML = '<span class="kic" style="--kc:var(' + c.kc + ')">' + icon(c.ic) + (ci ? '<em style="--cc:var(' + ci.col + ')"></em>' : "") + "</span><div>" +
+        esc(o.name) + "<small>" + esc(sub) + "</small></div>" + (o.lv ? '<span class="ilv">' + (o.lv === "B" ? "B" : "L" + esc(o.lv)) + "</span>" : "");
+      d.onclick = function () { showPlace(i); };
+      d.onkeydown = function (ev) { if (ev.key === "Enter") { d.onclick(); } };
+      list.appendChild(d);
+    });
+    if (!n) {
+      var p = document.createElement("p"); p.className = "note";
+      p.textContent = "No " + c.label.toLowerCase() + " on " + levelName(level) + " in the floor plans. Try another level on the right.";
+      list.appendChild(p);
+    }
+    setPeek();
+  }
+
+  // ---------- the place panel ----------
+  var DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var DAYS_LONG = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  function curSpot() { return view === "place" && catList[catIdx] ? catList[catIdx].spot || null : cardSpot; }
+  function shortClock(h) { h = h % 24; return (h % 12 || 12) + (h < 12 ? "a" : "p"); }
+  function clockAt(t) { var d = new Date(t); return clock(d.getHours() + d.getMinutes() / 60); }
+  function usualAt(type, dow, h) {
+    var t = CROWD_USUAL[type === "library" ? "study" : type], rows = dow >= 1 && dow <= 5 ? t.wk : t.we, v = 5;
+    for (var i = 0; i < rows.length; i++) { if (h >= rows[i][0]) { v = rows[i][1]; } }
+    return v;
+  }
+  // opening hours on that weekday this week: SIT's posted hours where listed, else a typical day for the kind of place
+  function daySpan(s, dow) {
+    var d = new Date(); d.setDate(d.getDate() + ((dow - d.getDay() + 7) % 7));
+    var rules = s.hours && HOURS[s.hours], day = ymd(d), we = dow === 0 || dow === 6;
+    for (var i = 0; rules && i < rules.length; i++) {
+      var r = rules[i];
+      if (day < r.from || day > r.to) { continue; }
+      var sp = we ? r.we : r.wk;
+      return sp ? {a: sp[0], b: sp[1], posted: true} : {closed: true, posted: true};
+    }
+    var t = CROWD_USUAL[s.type === "library" ? "study" : s.type], rows = we ? t.we : t.wk;
+    return {a: rows[0][0], b: rows[rows.length - 1][0], posted: false};
+  }
+  function roundTop(x, y, w, h, r) {
+    r = Math.min(r, h, w / 2);
+    return "M" + x.toFixed(1) + "," + (y + h).toFixed(1) + "V" + (y + r).toFixed(1) + "Q" + x.toFixed(1) + "," + y.toFixed(1) + " " + (x + r).toFixed(1) + "," + y.toFixed(1) +
+      "H" + (x + w - r).toFixed(1) + "Q" + (x + w).toFixed(1) + "," + y.toFixed(1) + " " + (x + w).toFixed(1) + "," + (y + r).toFixed(1) + "V" + (y + h).toFixed(1) + "Z";
+  }
+  // Popular times: one bar per hour from opening to closing. Solid = the average of students' reports for
+  // that weekday and hour; lighter = no reports yet, a usual term day (an estimate). Today's hour is outlined,
+  // and a line marks the live level (a sensor or a fresh report).
+  function popChart(s, dow) {
+    var sp = daySpan(s, dow);
+    if (sp.closed) { return '<p class="pnote">Closed on ' + DAYS_LONG[dow] + "s.</p>"; }
+    var a = Math.floor(sp.a), b = Math.ceil(sp.b);
+    if (b - a > 18) { a = 6; b = 24; }              // open 24 hours: show 6am to midnight
+    var P = pop[s.key], now = new Date(), today = dow === now.getDay(), bars = [], nRep = 0;
+    for (var h = a; h < b; h++) {
+      var k = dow * 24 + h, n = P ? P.n[k] || 0 : 0;
+      nRep += n;
+      bars.push({h: h, v: n ? P.sum[k] / n : usualAt(s.type, dow, h + 0.5), n: n});
+    }
+    var W = 340, top = 16, base = 92, gap = 2, bw = (W - gap * (bars.length - 1)) / bars.length;
+    var out = '<svg class="pchart bars" viewBox="0 0 ' + W + ' 112" role="img" aria-label="Popular times on ' + DAYS_LONG[dow] + '">';
+    var liveBar = null;
+    bars.forEach(function (o, i) {
+      var x = i * (bw + gap), hh = Math.max(3, (base - top) * Math.min(100, o.v) / 100), cur = today && o.h === now.getHours();
+      if (cur) { liveBar = {x: x}; }
+      var tip = clock(o.h) + "–" + clock(o.h + 1) + ": " + CROWD_LEVELS[crowdLevel(o.v)][0].toLowerCase() + (o.n ? " (" + o.n + " report" + (o.n > 1 ? "s" : "") + ")" : " (estimate)");
+      out += '<path class="pbar' + (o.n ? "" : " est") + (cur ? " now" : "") + '" d="' + roundTop(x, base - hh, bw, hh, 4) + '" data-t="' + esc(tip) + '"/>';
+      if (o.h % 3 === 0) { out += '<text class="paxis" x="' + (x + bw / 2).toFixed(1) + '" y="' + (base + 15) + '">' + shortClock(o.h) + "</text>"; }
+    });
+    out += '<line class="pbase" x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '"/>';
+    var ci = today ? crowdInfo(s) : null;
+    if (liveBar && ci && ci.src !== "usual" && ci.lv >= 0) {
+      var y = base - (base - top) * Math.min(100, ci.pct) / 100, cx = Math.max(12, Math.min(W - 12, liveBar.x + bw / 2));
+      out += '<line class="plive" x1="' + (liveBar.x - 3).toFixed(1) + '" x2="' + (liveBar.x + bw + 3).toFixed(1) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>' +
+        '<text class="plivet" x="' + cx.toFixed(1) + '" y="' + (y - 5).toFixed(1) + '">Live</text>';
+    }
+    out += "</svg>";
+    var cap = nRep ? "From " + nRep + " student report" + (nRep > 1 ? "s" : "") + " on " + DAYS_LONG[dow] + "s. Lighter bars are estimates."
+      : "No student reports for " + DAYS_LONG[dow] + "s yet, so these are estimates for a usual term day." + (crowdDb && crowdCanWrite ? " Tap Quiet to Packed above to add yours." : "");
+    if (!sp.posted) { cap += " Opening hours shown are typical, not posted."; }
+    return out + '<p class="pcap">' + esc(cap) + "</p>";
+  }
+  function feedFor(key) { for (var i = 0; i < CROWD_FEEDS.length; i++) { if (CROWD_FEEDS[i].key === key) { return CROWD_FEEDS[i]; } } return null; }
+  var hist = {};            // key -> {at, loading, err, pts: [{t, n, temp, hum}]} today's readings from ThingSpeak
+  var lineCharts = [];      // hover data for the line charts on the place panel
+  function lineChart(pts, val, cap, unit) {
+    var W = 340, top = 14, base = 96;
+    var t0 = new Date(pts[0].t); t0.setMinutes(0, 0, 0);
+    var x1 = Math.max(Date.now(), pts[pts.length - 1].t), t1 = new Date(x1);
+    if (t1.getMinutes() || t1.getSeconds()) { t1.setHours(t1.getHours() + 1, 0, 0, 0); }
+    var x0 = Math.min(t0.getTime(), t1.getTime() - 3 * 3600e3);
+    x1 = t1.getTime();
+    var mx = 0; pts.forEach(function (p) { mx = Math.max(mx, val(p)); });
+    var ymax = Math.max(cap || 0, mx, 10) * 1.08;
+    function X(t) { return (t - x0) / (x1 - x0) * W; }
+    function Y(v) { return base - (base - top) * v / ymax; }
+    var d = pts.map(function (p, i) { return (i ? "L" : "M") + X(p.t).toFixed(1) + "," + Y(val(p)).toFixed(1); }).join("");
+    var id = lineCharts.length;
+    lineCharts.push({pts: pts, val: val, X: X, Y: Y, W: W, unit: unit});
+    var out = '<svg class="pchart line" data-lc="' + id + '" viewBox="0 0 ' + W + ' 116" role="img" aria-label="People inside through today">';
+    out += '<path class="parea" d="' + d + "L" + X(pts[pts.length - 1].t).toFixed(1) + "," + base + "L" + X(pts[0].t).toFixed(1) + "," + base + 'Z"/>';
+    if (cap) { out += '<line class="pcapl" x1="0" x2="' + W + '" y1="' + Y(cap).toFixed(1) + '" y2="' + Y(cap).toFixed(1) + '"/><text class="pcapt" x="' + W + '" y="' + (Y(cap) - 4).toFixed(1) + '">Holds ' + cap + "</text>"; }
+    out += '<line class="pbase" x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '"/>';
+    var step = (x1 - x0) > 9 * 3600e3 ? 3 : (x1 - x0) > 4 * 3600e3 ? 2 : 1;
+    for (var t = x0; t <= x1; t += 3600e3) {
+      var hr = new Date(t).getHours();
+      if (hr % step === 0) { out += '<text class="paxis" x="' + Math.max(8, Math.min(W - 8, X(t))).toFixed(1) + '" y="' + (base + 15) + '">' + shortClock(hr) + "</text>"; }
+    }
+    out += '<path class="pline" d="' + d + '"/><line class="pcross" x1="0" x2="0" y1="' + top + '" y2="' + base + '" visibility="hidden"/><circle class="pdot" r="4.5" cx="0" cy="0" visibility="hidden"/></svg>';
+    return out;
+  }
+  function peopleSection(s) {
+    var f = feedFor(s.key), H = hist[s.key], h = '<div class="psec"><h3>People inside today</h3>';
+    if (!f) {
+      var lr = liveFac[s.key], lh = liveHist[s.key];
+      if (lr && lr.count !== null) {
+        var o = h + '<p class="pstat"><b>' + lr.count + "</b>" + (lr.capacity ? " of " + lr.capacity : "") + " inside" + (lr.pct !== null ? " (" + Math.round(lr.pct) + "%)" : "") + ", " + esc(ago(lr.crowdAt)) + "</p>";
+        if (lh && lh.length > 1) { o += lineChart(lh, function (p) { return p.n; }, lr.capacity, " inside") + '<p class="pcap">Readings since you opened the map, every ' + LIVE_EVERY / 1e3 + " s.</p>"; }
+        return o + liveBadge(lr, "crowdAt") + "</div>";
+      }
+      return h + '<p class="pnote">' + (LIVE_API && s.fid ? "No live count for " + esc(s.fid) + " yet. Once its crowd board posts, the count shows here." : "No doorway counter at this spot yet. Once one sends to ThingSpeak, its count through the day shows here, with temperature and humidity.") + "</p></div>";
+    }
+    if (!H || H.loading) { return h + '<p class="pnote">Loading the counter’s readings…</p></div>'; }
+    if (H.err) { return h + '<p class="pnote">Can’t reach this counter on ThingSpeak right now.</p></div>'; }
+    var pts = H.pts.filter(function (p) { return p.n !== null; });
+    if (!pts.length) { return h + '<p class="pnote">No readings from the counter yet today.</p></div>'; }
+    var last = pts[pts.length - 1], peak = pts[0];
+    pts.forEach(function (p) { if (p.n > peak.n) { peak = p; } });
+    return h + '<p class="pstat"><b>' + last.n + "</b> inside, " + esc(ago(last.t)) + " · peak " + peak.n + " at " + esc(clockAt(peak.t)) + "</p>" +
+      lineChart(pts, function (p) { return p.n; }, f.capacity, " inside") + "</div>";
+  }
+  function envSection(s) {
+    var f = feedFor(s.key), lr = liveFac[s.key];
+    if (!f && !(lr && (lr.temp !== null || lr.hum !== null))) { return ""; }
+    var e = envLive[s.key], H = hist[s.key], h = '<div class="psec"><h3>Temperature and humidity</h3>';
+    if (!e) { return h + '<p class="pnote">This counter isn’t sending temperature or humidity. Add a DHT22 sensor (ThingSpeak fields ' + f.tempField + " and " + f.humField + ") to see them here.</p></div>"; }
+    function range(k, dp) {
+      var lo = Infinity, hi = -Infinity;
+      ((H && H.pts) || []).forEach(function (p) { if (p[k] !== null) { lo = Math.min(lo, p[k]); hi = Math.max(hi, p[k]); } });
+      return lo <= hi ? "today " + lo.toFixed(dp) + "–" + hi.toFixed(dp) : "";
+    }
+    var tr = range("temp", 1), hr = range("hum", 0);
+    var cf = (lr && COMFORT[lr.comfort] ? lr.comfort : comfortOf(e.temp, e.hum)), cc = cf ? COMFORT[cf] : null;
+    return h + '<div class="ptiles"><div' + (cc ? ' class="tc" style="--tc:var(' + cc[1] + ')"' : "") + "><b>" + (e.temp !== null ? e.temp.toFixed(1) + "°C" : "–") + "</b><small>Temperature" + (tr ? " · " + tr + "°C" : "") + "</small>" +
+      (cc ? '<span class="tl">' + esc(cc[0]) + "</span>" : "") + "</div>" +
+      "<div><b>" + (e.hum !== null ? Math.round(e.hum) + "%" : "–") + "</b><small>Humidity" + (hr ? " · " + hr + "%" : "") + "</small></div></div>" +
+      '<div class="ckey tkey">' + COMFORT_KEYS.map(function (k) { return '<span style="--cc:var(' + COMFORT[k][1] + ')"><i></i>' + COMFORT[k][0] + "</span>"; }).join("") + "</div>" +
+      (e.src === "live" && lr ? liveBadge(lr, "envAt") : '<p class="pcap">From the doorway counter’s sensor, ' + esc(ago(e.at)) + ".</p>") + "</div>";
+  }
+  function renderPlace() {
+    var o = catList[catIdx], c = activeCat;
+    if (view !== "place" || !o || !c) { return; }
+    var s = o.spot, ci = crowdOf(s), keep = $("place").scrollTop;
+    $("place").style.setProperty("--kc", "var(" + c.kc + ")");
+    var p = $("plIcon"); p.style.setProperty("--kc", "var(" + c.kc + ")"); p.innerHTML = icon(c.ic);
+    $("plName").textContent = o.name;
+    $("plSub").textContent = (o.lv ? [o.kinds ? o.kinds.join(", ") : null, (o.b ? o.b + " " : "") + levelName(o.lv)].filter(Boolean).join(" · ") : (registry[o.id] || {}).sub || "") +
+      (ci && s.fid ? " · Facility ID " + s.fid : "");
+    $("plGo").disabled = $("plStart").disabled = !(GR && GR.t[o.id]);
+    $("plActs").hidden = !FEATURES.directions;
+    var h = "";
+    lineCharts = [];
+    if (s && !ci) {         // no crowd part in this copy: just the opening hours
+      var hr = hoursNow(s);
+      h += '<div class="psec"><p class="pnote">' + esc(hr ? hr.text + ". " + hr.note + "." : "Opening hours aren't listed for this spot.") + "</p></div>";
+    } else if (s) {
+      h += '<div class="psec pnow" style="--cc:var(' + ci.col + ')"><i></i><div><b>' + esc(ci.lv < 0 ? "Closed" : ci.name + " now") + "</b><small>" + esc(ci.when) + "</small>" +
+        (ci.hours ? "<small>" + esc((ci.lv >= 0 ? ci.hours.text + ". " : "") + ci.hours.note + ".") + "</small>" : "") + "</div></div>";
+      if (crowdDb && crowdCanWrite && ci.lv >= 0) {
+        h += '<div class="psec preport"><small>How busy is it right now?</small><div>' + CROWD_LEVELS.map(function (l, k) {
+          return '<button data-p="' + [20, 50, 75, 95][k] + '" style="--cc:var(' + l[1] + ')">' + l[0] + "</button>";
+        }).join("") + "</div></div>";
+      }
+      var dow = placeDow === null ? new Date().getDay() : placeDow;
+      h += '<div class="psec"><h3>Popular times</h3><div class="pdays" role="tablist" aria-label="Day">' + [1, 2, 3, 4, 5, 6, 0].map(function (d) {
+        return '<button role="tab" data-dow="' + d + '" aria-selected="' + (d === dow ? "true" : "false") + '">' + DAYS[d] + "</button>";
+      }).join("") + "</div>" + popChart(s, dow) + "</div>";
+      h += peopleSection(s) + envSection(s) + roomSection(s);
+    } else {
+      h += '<div class="psec"><p class="pnote">' + esc(c.id === "wc" ? "Toilets here: " + (o.kinds || []).join(", ") + "." : c.id === "print" ? "Printing on " + levelName(o.lv) + (o.b ? " of " + o.b : "") + "." : (registry[o.id] || {}).sub || "") +
+        (catList.length > 1 ? " Use the arrows at the bottom for the next nearest." : "") + "</p></div>";
+    }
+    $("plBody").innerHTML = h + '<div class="ptip" hidden></div>';
+    $("place").scrollTop = keep;
+    var rb = $("plBody").querySelectorAll(".preport button");
+    for (var i = 0; i < rb.length; i++) { rb[i].onclick = function () { report(Number(this.dataset.p)); }; }
+    var db = $("plBody").querySelectorAll(".pdays button");
+    for (var j = 0; j < db.length; j++) { db[j].onclick = function () { placeDow = Number(this.dataset.dow); renderPlace(); }; }
+    wireCharts();
+    if (ci && feedFor(s.key)) { loadHistory(s.key); }
+  }
+  // hover (and touch) read-outs on the charts
+  function wireCharts() {
+    var tip = $("plBody").querySelector(".ptip");
+    function show(sec, x, y, text) {
+      var r = sec.getBoundingClientRect();
+      if (tip.parentNode !== sec) { sec.appendChild(tip); }
+      tip.textContent = text; tip.hidden = false;
+      tip.style.left = Math.max(40, Math.min(r.width - 40, x - r.left)) + "px"; tip.style.top = (y - r.top - 6) + "px";
+    }
+    var bars = $("plBody").querySelectorAll(".pchart.bars");
+    for (var i = 0; i < bars.length; i++) {
+      bars[i].addEventListener("pointermove", function (ev) {
+        var b = ev.target.closest ? ev.target.closest(".pbar") : null;
+        if (!b) { tip.hidden = true; return; }
+        var r = b.getBoundingClientRect();
+        show(this.parentNode, r.left + r.width / 2, r.top, b.getAttribute("data-t"));
+      });
+      bars[i].addEventListener("pointerleave", function () { tip.hidden = true; });
+    }
+    var lines = $("plBody").querySelectorAll(".pchart.line");
+    for (var j = 0; j < lines.length; j++) {
+      lines[j].addEventListener("pointermove", function (ev) {
+        var lc = lineCharts[Number(this.dataset.lc)], r = this.getBoundingClientRect();
+        if (!lc) { return; }
+        var vx = (ev.clientX - r.left) / r.width * lc.W, best = lc.pts[0];
+        lc.pts.forEach(function (p) { if (Math.abs(lc.X(p.t) - vx) < Math.abs(lc.X(best.t) - vx)) { best = p; } });
+        var px = lc.X(best.t), py = lc.Y(lc.val(best)), cr = this.querySelector(".pcross"), dot = this.querySelector(".pdot");
+        cr.setAttribute("x1", px); cr.setAttribute("x2", px); cr.setAttribute("visibility", "visible");
+        dot.setAttribute("cx", px); dot.setAttribute("cy", py); dot.setAttribute("visibility", "visible");
+        show(this.parentNode, r.left + px / lc.W * r.width, r.top + py / 116 * r.height, clockAt(best.t) + ": " + lc.val(best) + lc.unit);
+      });
+      lines[j].addEventListener("pointerleave", function () {
+        tip.hidden = true;
+        this.querySelector(".pcross").setAttribute("visibility", "hidden"); this.querySelector(".pdot").setAttribute("visibility", "hidden");
+      });
+    }
+  }
+  function num(v) { return v === null || v === undefined || v === "" || !isFinite(Number(v)) ? null : Number(v); }
+  // today's readings for one counter (people inside, temperature, humidity), refreshed at most once a minute
+  function loadHistory(key) {
+    var f = feedFor(key), H = hist[key];
+    if (!f || (H && (H.loading || Date.now() - H.at < 60e3))) { return; }
+    hist[key] = {at: Date.now(), loading: true, pts: H ? H.pts : []};
+    var url = "https://api.thingspeak.com/channels/" + encodeURIComponent(f.channel) + "/feeds.json?days=1&results=8000&timezone=Asia%2FSingapore" +
+      (f.readKey ? "&api_key=" + encodeURIComponent(f.readKey) : "");
+    fetch(url).then(function (r) { if (!r.ok) { throw new Error(r.status); } return r.json(); })
+      .then(function (j) {
+        if (!j || !j.feeds) { throw new Error("no access"); }
+        var mid = new Date(); mid.setHours(0, 0, 0, 0);
+        var pts = [];
+        j.feeds.forEach(function (e) {
+          var t = Date.parse(e.created_at);
+          if (t >= mid.getTime()) { pts.push({t: t, n: num(e["field" + f.field]), temp: num(e["field" + f.tempField]), hum: num(e["field" + f.humField])}); }
+        });
+        pts.sort(function (a, b) { return a.t - b.t; });
+        hist[key] = {at: Date.now(), pts: pts};
+      })
+      .catch(function () { hist[key] = {at: Date.now(), err: true, pts: []}; })
+      .then(function () { var o = catList[catIdx]; if (view === "place" && o && o.spot && o.spot.key === key) { renderPlace(); } });
+  }
+  $("plGo").onclick = function () { var o = catList[catIdx]; if (o) { openDir({to: o.id}); } };
+  $("plStart").onclick = function () { var o = catList[catIdx]; if (o) { openDir({from: o.id}); } };
+
+  // ---------- pins on the map ----------
+  // Always (zoomed in): study spots, library, food and gyms on this level, with a dot for how busy.
+  // With a category on: all of its places, those on other levels faded with their level.
+  var pinLayer = L.layerGroup(), pinned = {};
+  function drawPins() {
+    pinLayer.clearLayers(); pinned = {};
+    if (!D || !map._loaded) { return; }
+    var z = map.getZoom(), catOn = !!activeCat && (view === "place" || view === "cat"), specs = [];
+    var curId = view === "place" && catList[catIdx] ? catList[catIdx].id : null;
+    function add(o, c, off, lab, ci, cur) { pinned[o.id] = true; specs.push({o: o, c: c, off: off, lab: lab, ci: ci, cur: cur}); }
+    if (catOn) {
+      catList.forEach(function (o) { add(o, activeCat, !!(o.lv && o.lv !== level), true, crowdOf(o.spot), o.id === curId); });
+    }
+    if (z >= 17.75) {
+      CROWD_SPOTS.forEach(function (s) {
+        if (!s.id || pinned[s.id] || (s.lv && s.lv !== level)) { return; }
+        add({id: s.id, name: s.label, ll: s.ll, lv: s.lv, spot: s}, CAT_OF_TYPE[s.type], false, z >= 18.75 || crowdMode, crowdOf(s), false);
+      });
+    }
+    // a label that would cover another pin or label is left off (hover shows it); the current place's goes first
+    specs.sort(function (a, b) { return (b.cur - a.cur) || (a.off - b.off); });
+    var boxes = specs.map(function (sp) { var p = map.latLngToContainerPoint(sp.o.ll); sp.pt = p; return [p.x - 15, p.y - 15, p.x + 15, p.y + 15]; });
+    specs.forEach(function (sp) {
+      sp.text = (sp.o.spot && sp.o.spot.fixedId ? "" : sp.o.name);     // the hawker centre already has its name on the map
+      if (!sp.lab) { return; }
+      var t = (sp.off ? "L00 " : "") + sp.text + (sp.ci && crowdMode ? " · " + sp.ci.name + countText(sp.ci) : ""), w = Math.min(170, t.length * 6.6), hgt = t.length * 6.6 > 170 ? 15 : 9;
+      var r = [sp.pt.x + 16, sp.pt.y - hgt, sp.pt.x + 20 + w, sp.pt.y + hgt];
+      for (var i = 0; i < boxes.length && !sp.cur; i++) {
+        var q = boxes[i];
+        if (r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1]) { sp.lab = false; return; }
+      }
+      boxes.push(r);
+    });
+    specs.forEach(function (sp) { addPin(sp.o, sp.c, sp.off, sp.lab, sp.ci, sp.cur, sp.text); });
+  }
+  function addPin(o, c, off, lab, ci, cur, text) {
+    var html = '<div class="apin' + (off ? " off" : "") + (lab ? "" : " nolab") + (cur ? " cur" : "") + '" style="--kc:var(' + c.kc + ")" + (ci ? ";--cc:var(" + ci.col + ")" : "") + '">' +
+      "<i>" + icon(c.ic) + "</i>" + (ci ? "<em></em>" : "") + "<span>" + (off ? "<b>" + (o.lv === "B" ? "B" : "L" + esc(o.lv)) + "</b> " : "") + esc(text) +
+      (ci && crowdMode ? " <s>" + (text ? "· " : "") + esc(ci.name + countText(ci)) + "</s>" : "") + "</span></div>";
+    var m = L.marker(o.ll, {pane: "pins", keyboard: false, riseOnHover: true, zIndexOffset: cur ? 2000 : off ? 0 : 1000, title: o.name,
+      icon: L.divIcon({className: "", iconSize: null, html: html})});
+    m.on("click", function (ev) {
+      L.DomEvent.stopPropagation(ev);
+      var k = -1;
+      for (var i = 0; i < catList.length; i++) { if (catList[i].id === o.id) { k = i; } }
+      if (activeCat && (view === "place" || view === "cat") && k >= 0) { showPlace(k); }
+      else if (o.spot && CAT_OF_TYPE[o.spot.type]) { openCat(CAT_OF_TYPE[o.spot.type], o.id); }
+      else { select(o.id, true); }
+    });
+    pinLayer.addLayer(m);
+  }
+  function drawCrowd() { drawPins(); tintCrowd(); }
+
+  // ---------- list / search ----------
+  function addItem(e, onPick) {
+    var d = document.createElement("div");
+    d.className = "item"; d.tabIndex = 0; d.dataset.id = e.id;
+    d.innerHTML = '<span class="tag ' + e.tag + '">' + esc(e.code) + "</span><div>" + esc(e.name) + "<small>" + esc(e.sub) + "</small></div>";
+    d.onclick = onPick ? function () { onPick(e); } : function () { select(e.id, true); closeSheet(); };
+    d.onkeydown = function (ev) { if (ev.key === "Enter") { d.onclick(); } };
+    $("list").appendChild(d);
+  }
+  // registry entries matching every word, best first (name starts with the query, then name contains it)
+  function matches(q, keep) {
+    var words = q.split(/\s+/), out = [];
+    Object.keys(registry).forEach(function (k) {
+      var e = registry[k];
+      if (keep && !keep(k, e)) { return; }
+      var nm = e.name.toLowerCase(), t = (e.name + " " + e.sub + " " + e.code).toLowerCase();
+      for (var i = 0; i < words.length; i++) { if (t.indexOf(words[i]) === -1) { return; } }
+      var score = nm === q || (e.code || "").toLowerCase() === q ? 0 : nm.indexOf(q) === 0 ? 1 : nm.indexOf(q) >= 0 ? 2 : 3;
+      out.push([score, e.name.length, e]);
+    });
+    out.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    return out.slice(0, 60).map(function (x) { return x[2]; });
+  }
+  function buildList(q) {
+    $("list").innerHTML = "";
+    q = (q || "").trim().toLowerCase();
+    var shown = 0;
+    if (!q) {
+      Object.keys(registry).forEach(function (k) { var e = registry[k]; if (e.building || e.tag === "br" || e.tag === "nel" || e.tag === "esc" || k === "hawker") { addItem(e); } });
+      return;
+    }
+    matches(q).forEach(function (e) { addItem(e); shown++; });
+    if (!shown) {
+      var n = document.createElement("p"); n.className = "note";
+      n.textContent = "Nothing matches “" + q + "”. Try a room code like SR202, a lab name, or a block like E6.";
+      $("list").appendChild(n);
+    }
+  }
+  function syncClear() { $("searchClear").hidden = !$("search").value; }
+  $("search").addEventListener("focus", function () {
+    closeMenu();
+    if (view === "none") { setView("search"); buildList(this.value); if (isPhone()) { setSheet(true); } }
+  });
+  $("search").addEventListener("input", function () {
+    syncClear();
+    if (view !== "search") { if (dir.open) { closeDir(true); } clearSelection(); setView("search"); }
+    buildList(this.value);
+    if (isPhone()) { setSheet(true); }
+  });
+  $("search").addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter") { var f = $("list").querySelector(".item"); if (f && view === "search") { f.onclick(); } }
+    if (ev.key === "Escape") { this.value = ""; syncClear(); this.blur(); if (view === "search") { setView("none"); } }
+  });
+  $("searchGo").onclick = function () {
+    var f = view === "search" && $("search").value.trim() ? $("list").querySelector(".item") : null;
+    if (f) { f.onclick(); } else { $("search").focus(); }
+  };
+  $("searchClear").onclick = function () { $("search").value = ""; syncClear(); clearSelection(); if (view === "search") { setView("none"); } };
+
+  // ---------- menu ----------
+  function closeMenu() { $("menu").hidden = true; $("menuBtn").setAttribute("aria-expanded", "false"); }
+  $("menuBtn").onclick = function () { var o = $("menu").hidden; $("menu").hidden = !o; this.setAttribute("aria-expanded", o ? "true" : "false"); };
+  document.addEventListener("pointerdown", function (ev) {
+    if (!$("menu").hidden && !$("menu").contains(ev.target) && !$("menuBtn").contains(ev.target)) { closeMenu(); }
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") { closeMenu(); }
+    var tg = ev.target || {};
+    if (view === "place" && (ev.key === "ArrowLeft" || ev.key === "ArrowRight") && !/INPUT|TEXTAREA/.test(tg.tagName || "") && !$("map").contains(tg)) {
+      showPlace(catIdx + (ev.key === "ArrowLeft" ? -1 : 1));
+    }
+  });
+
+  // ---------- collapsing the panel (desktop) / the bottom sheet (phone) ----------
+  function updateDirMini() {
+    var R = dir.res;
+    $("dirMiniTime").textContent = R && !R.none ? R.mins + " min" : "Directions";
+    $("dirMiniText").textContent = R && !R.none ? fmtM(R.walk) + (dir.to ? " to " + dir.to.name : "") : dir.to ? "to " + dir.to.name : "";
+  }
+  $("collapse").onclick = function () {
+    var c = !document.body.classList.contains("collapsed");
+    bodyCls("collapsed", c);
+    this.setAttribute("aria-expanded", c ? "false" : "true");
+    this.setAttribute("aria-label", c ? "Expand side panel" : "Collapse side panel"); this.title = this.getAttribute("aria-label");
+    $("dirMini").hidden = !(c && view === "dir");
+    updateDirMini();
+  };
+  $("dirMiniOpen").onclick = function () { bodyCls("collapsed", false); $("dirMini").hidden = true; $("collapse").setAttribute("aria-expanded", "true"); };
+  $("dirMiniClose").onclick = function () { closeDir(); };
+  function setSheet(open) {
+    $("side").classList.toggle("open", !!open);
+    bodyCls("sheet-open", !!open && isPhone() && view !== "none");
+    $("sheetLabel").textContent = open ? "Hide" : view === "dir" ? "Show steps" : view === "place" ? "Show details" : "Show list";
+    setPeek();
+  }
+  function closeSheet() { if (isPhone()) { setSheet(false); $("search").blur(); } }
+  $("sheetHandle").onclick = function () { setSheet(!$("side").classList.contains("open")); };
+  // the resting sheet shows the title and the first lines: route summary, the place's buttons, or two results
+  function sheetPeek() {
+    if (view === "none") { return 0; }
+    var s;
+    if (view === "dir") { s = !$("dirSum").hidden ? $("dirSum") : $("dir"); }
+    else if (view === "place") { s = FEATURES.directions ? $("plActs") : $("place").querySelector(".phero"); }
+    else {
+      var its = $("list").querySelectorAll(".item");
+      s = its[1] || its[0] || (!$("phead").hidden ? $("phead") : $("list").firstChild) || $("sheetHandle");
+    }
+    return Math.min(s.offsetTop + s.offsetHeight + 10, Math.round(window.innerHeight * 0.5));
+  }
+  function setPeek() {
+    var p = isPhone() ? sheetPeek() : 0, st = document.documentElement.style;
+    st.setProperty("--peek", p + "px");
+    st.setProperty("--sheetSpace", !isPhone() || view === "none" ? "0px" : $("side").classList.contains("open") ? "72vh" : p + "px");
+  }
+  function panelPx() { return !isPhone() && document.body.classList.contains("panel-on") && !document.body.classList.contains("collapsed") ? 424 : 0; }
+  function sheetPx() { return !isPhone() || view === "none" ? 0 : $("side").classList.contains("open") ? window.innerHeight * 0.72 : sheetPeek() + (view === "place" ? 58 : 0); }
+  function refreshPanel() {
+    if (view === "dir") { drawRoute(); renderDirList(); }
+    else if (view === "search") { buildList($("search").value); }
+    else if (view === "crowd") { buildCrowdList(); }
+    else if (view === "cat" && activeCat) { buildCatList(activeCat); }
+    else if (view === "place" && catList[catIdx]) { select(catList[catIdx].id, false); $("card").classList.remove("show"); placeHue(catList[catIdx]); renderPlace(); renderSwitcher(); }
+    drawCrowd(); drawLabels();
+  }
+
+  // ---------- controls ----------
+  function fitCampus(animate) {
+    var pad = isPhone() ? {paddingTopLeft: [12, 118], paddingBottomRight: [60, sheetPx() + 12]} : {paddingTopLeft: [panelPx() + 16, 76], paddingBottomRight: [90, 20]};
+    pad.animate = !!animate;
+    map.fitBounds(boundsOfAll(), pad);
+  }
+  $("zin").onclick = function () { map.zoomIn(0.75); };
+  $("zout").onclick = function () { map.zoomOut(0.75); };
+  $("zfit").onclick = function () { fitCampus(true); };
+  $("chipZones").onclick = function () {
+    showZones = !showZones; this.setAttribute("aria-pressed", showZones);
+    if (showZones) { layers.zones.addTo(map); layers.zones.eachLayer(function (l) { l.bringToBack(); }); layers.ground.eachLayer(function (l) { l.bringToBack(); }); }
+    else { map.removeLayer(layers.zones); }
+  };
+  $("chipBridges").onclick = function () {
+    levelBridgesOnly = !levelBridgesOnly; this.setAttribute("aria-pressed", levelBridgesOnly);
+    restyleBridges();
+  };
+  map.on("click", function () {
+    clearSelection(); closeMenu();
+    if (view === "search" && !$("search").value.trim()) { setView("none"); }
+    closeSheet();
+  });
+  $("goHere").onclick = function () { if (cardId) { openDir({to: cardId}); } };
+  $("startHere").onclick = function () { if (cardId) { openDir({from: cardId}); } };
+  $("cardMore").onclick = function () { var s = cardSpot; if (s && CAT_OF_TYPE[s.type]) { openCat(CAT_OF_TYPE[s.type], s.id); } };
+  map.on("zoomend", function () { updateZoomState(); drawCrowd(); drawLabels(); });
+  map.on("moveend", function () { drawLabels(); store("sitwf-view", {c: map.getCenter(), z: map.getZoom()}); });
+  window.addEventListener("resize", function () { if (!isPhone()) { bodyCls("sheet-open", false); } setPeek(); if (view === "place") { renderSwitcher(); } });
+
+  // the chips
+  CATS.forEach(function (c) {
+    var b = document.createElement("button");
+    b.className = "cat"; b.id = "cat-" + c.id; b.dataset.ic = c.ic; b.type = "button";
+    b.setAttribute("aria-pressed", "false"); b.style.setProperty("--kc", "var(" + c.kc + ")");
+    b.textContent = c.label;
+    b.onclick = function () { if (activeCat === c && (view === "place" || view === "cat")) { closePanel(); } else { openCat(c); } };
+    $("cats").appendChild(b);
+  });
+  paintIcons();
+
+  // re-colour the canvas when the theme changes
+  function retheme() {
+    if (!D) { return; }
+    var keep = level;
+    layers.ground.clearLayers(); layers.bldg.clearLayers(); layers.bridges.clearLayers(); layers.extras.clearLayers();
+    layers.plates.clearLayers(); layers.labels.clearLayers(); layers.zones.clearLayers();
+    registry = {};
+    drawStatic(); drawLevel(keep);
+    refreshPanel();
+    if (showZones) { layers.zones.addTo(map); }
+  }
+  if (window.matchMedia) { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", retheme); }
+  new MutationObserver(retheme).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
+
+  // ---------- crowd levels ----------
+  // Study spots, the library, gyms and food courts. Each shows the freshest of:
+  //   1. a sensor reading   (window.setCrowd, from the IoT side; counts for 15 min)
+  //   2. a student report   (the card's Quiet / Moderate / Busy / Packed buttons, shared live; 60 min)
+  //   3. the usual level for this day and hour, an estimate shown as such
+  var CROWD_SPOTS = [
+    {key: "w1-learning-commons", fid: "LIB", type: "library", lv: "5", name: "Learning Commons", title: "Library: Learning Commons"},
+    {key: "w1-book-collection", fid: "LIB2", type: "library", lv: "5", name: "Book Collection", title: "Library: Book Collection"},
+    {key: "w1-library-amphitheatre", fid: "LIB3", type: "library", lv: "4", name: "Library Amphitheatre L4", title: "Library Amphitheatre"},
+    {key: "e1-lounge-library", fid: "LIB4", type: "library", lv: "3", name: "Lounge Library", title: "E1 Lounge Library"},
+    {key: "e2-l5-open-study", type: "study", lv: "5", name: "Open study area", title: "E2 L5 Open study area"},
+    {key: "e2-l5-study-1", fid: "E2L5A", type: "study", lv: "5", name: "Chua Thian Poh Discovery Hub 2", title: "E2 L5 Discovery Hub 2 (Study Space 1)", hours: "exam"},
+    {key: "e2-l5-study-2", fid: "E2L5B", type: "study", lv: "5", name: "Chua Thian Poh Discovery Hub 3", title: "E2 L5 Discovery Hub 3 (Study Space 2)", hours: "exam"},
+    {key: "e2-l2m-study", fid: "E2L2M", type: "study", lv: "2M", name: "PROJECT HUB COLLABORATIVE ZONE + SMALL Pantry", title: "E2 L2M Project Hub (Study Space)", hours: "e2l2m"},
+    {key: "w1-l5-project-hub", fid: "W1L5", type: "study", lv: "5", name: "Project Hub", b: "W1", title: "W1 L5 Project Hub", hours: "w1l5"},
+    {key: "w1-l6-project-hub", fid: "W1L6", type: "study", lv: "6", name: "Project Hub", b: "W1", title: "W1 L6 Project Hub", hours: "exam"},
+    {key: "e2-l7-study", fid: "E2L7", type: "study", lv: "7", name: "E2 L7 Study Space"},
+    {key: "e2-l9-study", fid: "E2L9", type: "study", lv: "9", name: "E2 L9 Study Space"},
+    {key: "e6-l6-study", fid: "E6L6", type: "study", lv: "6", name: "E6 L6 Study Space"},
+    {key: "e6-l7-study", fid: "E6L7", type: "study", lv: "7", name: "E6 L7 Study Space"},
+    {key: "e6-l8-study", fid: "E6L8", type: "study", lv: "8", name: "E6 L8 Study Space"},
+    {key: "e6-l9-study", fid: "E6L9", type: "study", lv: "9", name: "E6 L9 Study Space"},
+    {key: "w1-forum-lounge", type: "study", lv: "2", name: "Lounge @ The Forum", title: "W1 Lounge @ The Forum"},
+    {key: "e5-gym-1", fid: "GYM", type: "gym", lv: "5", name: "Gym 1", title: "E5 Gym 1"},
+    {key: "e5-gym-2", fid: "GYM2", type: "gym", lv: "6", name: "Gym 2", title: "E5 Gym 2"},
+    {key: "e5-outdoor-gym", fid: "GYM3", type: "gym", lv: "7", name: "Outdoor Gym", title: "E5 Outdoor Gym"},
+    {key: "e1-gym", fid: "GYM4", type: "gym", lv: "2M", name: "GYM", title: "E1 Gym"},
+    {key: "e5-bouldering", type: "gym", lv: "1", name: "Bouldering Enclave", title: "E5 Bouldering Enclave"},
+    {key: "e4-food-court", fid: "FCA", type: "food", lv: "1", name: "E4 - Food Court", title: "E4 Food Court"},
+    {key: "hawker", type: "food", lv: null, fixedId: "hawker", title: "Punggol Coast Hawker Centre"},
+    {key: "w3-food-court", fid: "FCB", type: "food", lv: "2", name: "W3 Food Court"},
+    {key: "e1-takeaway-kiosk", fid: "FCC", type: "food", lv: "1", name: "Takeaway Kiosk", title: "E1 Takeaway Kiosk"}
+  ];
+  // Opening hours, from SIT's "Trial for extended hours at selected study spaces" notice (from 19 Oct 2026).
+  // Each period: dates it covers, then hours on Mon–Fri (wk) and Sat–Sun (we) as [open, close] in
+  // hours (0–24), or null for closed. Outside these periods the hours aren't listed, so none are shown.
+  var HOURS = {
+    e2l2m: [{from: "2026-10-19", to: "2026-11-15", wk: [0, 24], we: null, note: "Weeks 8–11 trial: 24 h on weekdays, closed Sat–Sun"},
+            {from: "2026-11-16", to: "2026-12-06", wk: [0, 24], we: [0, 24], note: "Exam period: open 24 h every day"}],
+    w1l5:  [{from: "2026-10-19", to: "2026-11-15", wk: [0, 24], we: [7.5, 22], note: "Weeks 8–11 trial: 24 h on weekdays, 7.30am–10pm Sat–Sun"},
+            {from: "2026-11-16", to: "2026-12-06", wk: [0, 24], we: [0, 24], note: "Exam period: open 24 h every day"}],
+    exam:  [{from: "2026-11-16", to: "2026-12-06", wk: [0, 24], we: [0, 24], note: "Exam period: open 24 h every day"}]
+  };
+  function ymd(d) { return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  function clock(h) { var hh = Math.floor(h), mm = Math.round((h - hh) * 60); return (hh % 12 || 12) + (mm ? "." + ("0" + mm).slice(-2) : "") + (hh < 12 || hh === 24 ? "am" : "pm"); }
+  // {open, text, note} for a spot right now, or null when its hours aren't listed for today
+  function hoursNow(s) {
+    var rules = s.hours && HOURS[s.hours];
+    if (!rules) { return null; }
+    var d = new Date(), day = ymd(d), h = d.getHours() + d.getMinutes() / 60, we = d.getDay() === 0 || d.getDay() === 6;
+    for (var i = 0; i < rules.length; i++) {
+      var r = rules[i];
+      if (day < r.from || day > r.to) { continue; }
+      var span = we ? r.we : r.wk;
+      if (!span) { return {open: false, text: "Closed today (closed Sat–Sun)", note: r.note}; }
+      if (span[0] === 0 && span[1] === 24) { return {open: true, text: "Open 24 hours today", note: r.note}; }
+      if (h < span[0]) { return {open: false, text: "Closed now, opens " + clock(span[0]), note: r.note}; }
+      if (h >= span[1]) { return {open: false, text: "Closed now (open " + clock(span[0]) + "–" + clock(span[1]) + " today)", note: r.note}; }
+      return {open: true, text: "Open until " + clock(span[1]), note: r.note};
+    }
+    return null;
+  }
+
+  var CROWD_GROUPS = [["study", "Study spots"], ["library", "Library"], ["food", "Food"], ["gym", "Gym & sport"]];
+  var CROWD_LEVELS = [["Quiet", "--c0"], ["Moderate", "--c1"], ["Busy", "--c2"], ["Packed", "--c3"]];
+  // usual % full from each hour on [hour, %]: a typical SIT term day, an assumption until real data comes in
+  var CROWD_USUAL = {
+    food: {wk: [[7, 20], [10, 30], [11.5, 85], [13.5, 55], [14.5, 30], [17.5, 55], [19.5, 20], [21, 5]], we: [[9, 10], [11, 35], [14, 15], [19, 5]]},
+    study: {wk: [[8, 30], [10, 55], [12, 60], [14, 75], [18, 50], [21, 25], [23, 5]], we: [[9, 20], [10, 40], [18, 20], [21, 5]]},
+    gym: {wk: [[7, 30], [9, 20], [12, 50], [14, 30], [17, 80], [21, 40], [22, 5]], we: [[8, 20], [9, 35], [18, 15], [21, 5]]}
+  };
+  // Doorway people counters (Arduino UNO WiFi Rev2 + 2 IR break-beams, sketch: crowd_counter.ino)
+  // post "people inside" to ThingSpeak; the map reads it every 30 s. One line per counter:
+  //   channel  - ThingSpeak channel ID         field    - the field with "people inside" (1 in the sketch)
+  //   readKey  - only for a private channel    key      - which spot it covers (a key from CROWD_SPOTS)
+  //   capacity - how many people the spot holds, so 84 of 120 inside shows as Busy
+  //   tempField, humField - the fields with temperature (°C) and humidity (%) from a DHT22 (4 and 5 in the sketch)
+  var CROWD_FEEDS = [
+    // {channel: 1234567, field: 1, readKey: "", key: "w1-learning-commons", capacity: 120},
+    // {channel: 1234568, field: 1, tempField: 4, humField: 5, readKey: "", key: "FCA", capacity: 300},   (key can be the facility ID)
+  ];
+  var feedState = {tried: false, ok: 0, failed: 0};
+  function normFeed(f) {
+    var sp = f && spotByKey(f.key || f.facility);
+    if (!(sp && /^\d{1,10}$/.test(String(f.channel)) && Number(f.capacity) > 0)) { return null; }
+    function fld(v, d) { return Math.min(8, Math.max(1, Number(v) || d)); }
+    return {channel: String(f.channel), field: fld(f.field, 1), tempField: fld(f.tempField, 4), humField: fld(f.humField, 5),
+            readKey: typeof f.readKey === "string" ? f.readKey : "", key: sp.key, capacity: Number(f.capacity)};
+  }
+  var CODE_FEEDS = null;
+  // counters can also be added without editing this file: the shared doc config/feeds = {feeds: [...same shape...]}
+  // (only editors can change it). Bad lines are skipped.
+  function setFeedConfig(list) {
+    if (!CODE_FEEDS) { CODE_FEEDS = CROWD_FEEDS.map(normFeed).filter(Boolean); }
+    var ok = (Array.isArray(list) ? list : []).map(normFeed).filter(Boolean);
+    CROWD_FEEDS = CODE_FEEDS.concat(ok);
+    hist = {};
+    feedState = {tried: false, ok: 0, failed: 0};
+    pollFeeds(); refreshCrowd();
+  }
+  var crowdLive = {};        // key -> {pct, src: "sensor" | "report", at, count?, capacity?}
+  var crowdMode = false, crowdDb = null, crowdCanWrite = false, cardSpot = null;
+  var pop = {};             // key -> {sum: [168], n: [168]}: students' reports by weekday x hour (popular times)
+  var envLive = {};         // key -> {temp, hum, at}: latest temperature / humidity from the counter
+  function zeros(n) { var a = []; for (var i = 0; i < n; i++) { a.push(0); } return a; }
+
+  // a spot by its key ("e4-food-court") or its facility ID ("FCA")
+  function spotByKey(k) { for (var i = 0; i < CROWD_SPOTS.length; i++) { if (CROWD_SPOTS[i].key === k || (CROWD_SPOTS[i].fid && CROWD_SPOTS[i].fid === k)) { return CROWD_SPOTS[i]; } } return null; }
+  // match each spot to its room or point of interest in the floor plans (and so to search and directions)
+  function resolveSpots() {
+    CROWD_SPOTS.forEach(function (s) {
+      s.id = null; s.unit = undefined;
+      if (s.fixedId) {
+        if (registry[s.fixedId]) { s.id = s.fixedId; s.ll = registry[s.fixedId].ll; s.label = s.title; registry[s.id].crowd = s; }
+        return;
+      }
+      (D.units[s.lv] || []).forEach(function (u, i) { if (!s.id && u[1] === s.name && (!s.b || u[3] === s.b)) { s.id = "u-" + s.lv + "-" + i; s.unit = i; s.ll = L.latLng(u[5] || u[4][0][0][0]); } });
+      (D.pois[s.lv] || []).forEach(function (p, i) { if (!s.id && p[0] === s.name) { s.id = "p-" + s.lv + "-" + i; s.ll = L.latLng(p[2], p[3]); } });
+      s.label = s.title || s.name;
+      if (s.id && registry[s.id]) { registry[s.id].crowd = s; }
+    });
+  }
+  function crowdLevel(p) { return p < 35 ? 0 : p < 65 ? 1 : p < 85 ? 2 : 3; }
+  function usualPct(type, d) {
+    var t = CROWD_USUAL[type === "library" ? "study" : type], h = d.getHours() + d.getMinutes() / 60;
+    var rows = d.getDay() >= 1 && d.getDay() <= 5 ? t.wk : t.we, v = 5;
+    for (var i = 0; i < rows.length; i++) { if (h >= rows[i][0]) { v = rows[i][1]; } }
+    return v;
+  }
+  function crowdNow(s) {
+    var c = crowdLive[s.key], age = c ? Date.now() - c.at : Infinity;
+    if (c && c.src === "sensor" && age < 15 * 60e3) { return c; }
+    if (c && age < 60 * 60e3) { return c; }
+    return {pct: usualPct(s.type, new Date()), src: "usual"};
+  }
+  function ago(t) { var m = Math.round((Date.now() - t) / 60e3); return m < 1 ? "just now" : m + " min ago"; }
+  function dayHour() {
+    var d = new Date(), h = d.getHours();
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()] + " " + (h % 12 || 12) + (h < 12 ? "am" : "pm");
+  }
+  function crowdInfo(s) {
+    var hr = hoursNow(s);
+    if (hr && !hr.open) { return {lv: -1, name: "Closed", col: "--cx", pct: 1000, src: "hours", when: hr.text, hours: hr}; }
+    var c = crowdNow(s), lv = crowdLevel(c.pct);
+    return {lv: lv, name: CROWD_LEVELS[lv][0], col: CROWD_LEVELS[lv][1], pct: c.pct, src: c.src,
+            when: c.src === "usual" ? "Usual for " + dayHour() + " (estimate)"
+              : c.src === "report" ? "Student report, " + ago(c.at)
+              : (typeof c.count === "number" ? "Live count: " + c.count + (c.capacity ? " of " + c.capacity : "") + " inside, " : "Sensor, about " + Math.round(c.pct) + "% full, ") + ago(c.at),
+            hours: hr, count: typeof c.count === "number" && c.src === "sensor" ? c.count : null, capacity: c.capacity || null};
+  }
+  function countText(ci) { return ci && ci.count !== null && ci.count !== undefined ? " " + ci.count + (ci.capacity ? "/" + ci.capacity : "") : ""; }
+
+  // with "How busy" on, the spot's room is filled in its crowd colour
+  function tintCrowd() {
+    CROWD_SPOTS.forEach(function (s) {
+      if (s.unit === undefined || s.lv !== level || !unitShapes[s.unit]) { return; }
+      if (selected && selected.layer === unitShapes[s.unit]) { return; }
+      var base = unitStyle(D.units[s.lv][s.unit][0]);
+      unitShapes[s.unit].setStyle(crowdMode ? {fillColor: tok(crowdInfo(s).col), fillOpacity: 0.55} : {fillColor: base.fillColor, fillOpacity: base.fillOpacity});
+    });
+  }
+  function showCrowdCard(s) {
+    if (!FEATURES.crowd) { s = null; }
+    cardSpot = s || null;
+    $("cardCrowd").hidden = !s;
+    if (!s) { return; }
+    var c = crowdInfo(s);
+    $("cardCrowd").style.setProperty("--cc", "var(" + c.col + ")");
+    $("crowdLvl").textContent = c.name;
+    $("crowdWhen").textContent = "· " + c.when;
+    $("crowdHours").hidden = !c.hours;
+    $("crowdHours").textContent = c.hours ? (c.lv >= 0 ? c.hours.text + ". " : "") + c.hours.note + "." : "";
+    $("crowdReport").hidden = !crowdDb || !crowdCanWrite || c.lv < 0;
+  }
+  function buildCrowdList() {
+    var list = $("list");
+    list.innerHTML = "";
+    var key = document.createElement("div"); key.className = "ckey";
+    key.innerHTML = CROWD_LEVELS.concat([["Closed", "--cx"]]).map(function (l) { return '<span style="--cc:var(' + l[1] + ')"><i></i>' + l[0] + "</span>"; }).join("");
+    list.appendChild(key);
+    CROWD_GROUPS.forEach(function (g) {
+      var spots = CROWD_SPOTS.filter(function (s) { return s.type === g[0] && s.id; })
+        .map(function (s) { return {s: s, c: crowdInfo(s)}; })
+        .sort(function (a, b) { return a.c.pct - b.c.pct; });
+      if (!spots.length) { return; }
+      var h = document.createElement("div"); h.className = "cgroup";
+      h.innerHTML = esc(g[1]) + "<small>quietest first</small>";
+      list.appendChild(h);
+      spots.forEach(function (o) {
+        var d = document.createElement("div");
+        d.className = "item"; d.tabIndex = 0; d.dataset.id = o.s.id;
+        d.innerHTML = '<span class="tag crowd" style="--cc:var(' + o.c.col + ')">' + (!o.s.lv ? "HC" : o.s.lv === "B" ? "B" : "L" + esc(o.s.lv)) + "</span><div>" + esc(o.s.label) +
+          "<small>" + esc(o.c.name + " · " + (o.c.hours && o.c.lv >= 0 ? o.c.hours.text + " · " : "") + o.c.when) + "</small></div>";
+        d.onclick = function () { if (CAT_OF_TYPE[o.s.type]) { openCat(CAT_OF_TYPE[o.s.type], o.s.id); } else { select(o.s.id, true); closeSheet(); } };
+        d.onkeydown = function (ev) { if (ev.key === "Enter") { d.onclick(); } };
+        list.appendChild(d);
+      });
+    });
+    var n = document.createElement("p"); n.className = "note";
+    n.textContent = (!CROWD_FEEDS.length && (LIVE_API || liveState.mock) ? "Spots with a sensor show live counts from the group's Apps Script. The rest show estimates for a usual term day, or student reports."
+      : !CROWD_FEEDS.length ? "No doorway counters connected yet, so levels are estimates for a usual term day. Tap a spot to report how busy it really is."
+      : feedState.tried && !feedState.ok ? "Can't reach the doorway counters on ThingSpeak from this copy of the map, so it's showing estimates and student reports."
+      : (function (k) { return "Live from " + k + " doorway counter" + (k > 1 ? "s" : "") + " on ThingSpeak" + (feedState.failed ? " (" + feedState.failed + " not answering)" : "") + ". Other spots show estimates or student reports."; })(feedState.tried ? feedState.ok : CROWD_FEEDS.length))
+      + " Hours for the Project Hubs and Discovery Hubs follow SIT's extended-hours trial (from 19 Oct 2026).";
+    if (LIVE_API || liveState.mock) {
+      var lb = document.createElement("p"); lb.className = "lbadge" + (liveOnline() ? "" : " off");
+      lb.innerHTML = "<i></i><span>" + esc(liveSummary()) + "</span>";
+      list.insertBefore(lb, list.children[1] || null);
+    }
+    list.appendChild(n);
+  }
+  function refreshCrowd() {
+    if (!D) { return; }
+    drawCrowd();
+    if (cardSpot) { showCrowdCard(cardSpot); }
+    var l = $("list"), keep = l.scrollTop;
+    if (view === "crowd") { buildCrowdList(); l.scrollTop = keep; }
+    else if (view === "cat" && activeCat && activeCat.types) { buildCatList(activeCat); l.scrollTop = keep; }
+    else if (view === "place") { placeHue(catList[catIdx]); renderPlace(); renderSwitcher(); }
+  }
+  function report(pct) {
+    var s = curSpot();
+    if (!s || !crowdDb) { return; }
+    var doc = {pct: pct, src: "report", at: Date.now()}, before = crowdLive[s.key];
+    crowdLive[s.key] = doc;
+    // it also counts toward the spot's popular times (one report per spot per device every 10 minutes)
+    var last = load("sitwf-rep-" + s.key);
+    if (!last || Date.now() - last > 10 * 60e3) {
+      store("sitwf-rep-" + s.key, Date.now());
+      var now = new Date(), k = now.getDay() * 24 + now.getHours(), P = pop[s.key];
+      var np = {sum: P ? P.sum.slice() : zeros(168), n: P ? P.n.slice() : zeros(168)};
+      np.sum[k] += pct; np.n[k] += 1; pop[s.key] = np;
+      crowdDb.doc("pop/" + s.key).set({sum: np.sum, n: np.n, at: Date.now()}).catch(function () { pop[s.key] = P; refreshCrowd(); });
+    }
+    refreshCrowd();
+    crowdDb.doc("crowd/" + s.key).set(doc).catch(function (e) {
+      if (crowdLive[s.key] === doc) { if (before) { crowdLive[s.key] = before; } else { delete crowdLive[s.key]; } }
+      if (e && e.code === "invalid_argument") { crowdCanWrite = false; }
+      refreshCrowd();
+    });
+  }
+  var rb = $("crowdReport").querySelectorAll("button");
+  for (var ri = 0; ri < rb.length; ri++) { rb[ri].onclick = function () { report(Number(this.dataset.p)); }; }
+  $("chipCrowd").onclick = function () {
+    if (!D) { return; }
+    if (view === "crowd") { closePanel(); return; }
+    if (dir.open) { closeDir(true); }
+    $("search").value = ""; syncClear(); closeMenu(); clearSelection();
+    setView("crowd");
+    setHead("busy", "--k-busy", "How busy", "Study spots, library, food and gyms right now");
+    buildCrowdList(); setPeek();
+    if (isPhone()) { setSheet(true); }
+  };
+  // live student reports, shared by everyone viewing the map
+  function connectCrowd() {
+    if (!window.claude || !window.claude.use) { return; }
+    window.claude.use("db").then(function (db) {
+      if (!db) { return; }
+      crowdDb = db; crowdCanWrite = true; refreshCrowd();
+      db.doc("config/feeds").onSnapshot(function (d) { setFeedConfig(d.exists && d.data() ? d.data().feeds : []); }, function () {});
+      db.collection("crowd").onSnapshot(function (snap) {
+        snap.docs.forEach(function (d) {
+          var v = d.data();
+          if (v && typeof v.pct === "number" && typeof v.at === "number" && spotByKey(d.id)) {
+            var cur = crowdLive[d.id];
+            if (!cur || v.at >= cur.at) { crowdLive[d.id] = {pct: Math.max(0, Math.min(100, v.pct)), src: v.src === "sensor" ? "sensor" : "report", at: v.at}; }
+          }
+        });
+        refreshCrowd();
+      }, function () {});
+      db.collection("pop").onSnapshot(function (snap) {
+        snap.docs.forEach(function (d) {
+          var v = d.data();
+          if (v && spotByKey(d.id) && Array.isArray(v.sum) && Array.isArray(v.n) && v.sum.length === 168 && v.n.length === 168) {
+            pop[d.id] = {sum: v.sum.map(function (x) { return Number(x) || 0; }), n: v.n.map(function (x) { return Math.max(0, Number(x) || 0); })};
+          }
+        });
+        refreshCrowd();
+      }, function () {});
+    });
+    window.claude.use("user").then(function (u) {
+      if (u && u.can) { u.can("data.write").then(function (ok) { if (ok === false) { crowdCanWrite = false; refreshCrowd(); } }); }
+    });
+  }
+  setInterval(refreshCrowd, 60e3);
+
+  // ---- for the IoT side ----
+  // window.setCrowd("e4-food-court", 72)                      percent full
+  // window.setCrowd("e4-food-court", {count: 140, capacity: 200})   (what the ThingSpeak poller does for you)
+  // window.setCrowd(key, value, {share: true})                also save it for everyone viewing (editors only)
+  function applySensor(key, value, at) {
+    var sp = spotByKey(key);
+    if (!sp) { return null; }
+    key = sp.key;
+    var pct = typeof value === "number" ? value : (value && value.capacity ? 100 * value.count / value.capacity : NaN);
+    if (!isFinite(pct)) { return null; }
+    var doc = {pct: Math.round(Math.max(0, Math.min(100, pct))), src: "sensor", at: at || Date.now()};
+    if (value && typeof value.count === "number") { doc.count = Math.max(0, Math.round(value.count)); doc.capacity = value.capacity; }
+    var cur = crowdLive[key];
+    if (!cur || cur.src !== "sensor" || doc.at >= cur.at) { crowdLive[key] = doc; }
+    return doc;
+  }
+  function pollFeeds() {
+    if (!FEATURES.crowd) { return; }
+    if (CODE_FEEDS === null) { CODE_FEEDS = CROWD_FEEDS = CROWD_FEEDS.map(normFeed).filter(Boolean); }
+    if (!CROWD_FEEDS.length) { return; }
+    var ok = 0, failed = 0, left = CROWD_FEEDS.length;
+    CROWD_FEEDS.forEach(function (f) {
+      var url = "https://api.thingspeak.com/channels/" + encodeURIComponent(f.channel) + "/feeds.json?results=8" +
+        (f.readKey ? "&api_key=" + encodeURIComponent(f.readKey) : "");
+      fetch(url).then(function (r) { if (!r.ok) { throw new Error(r.status); } return r.json(); })
+        .then(function (j) {
+          if (!j || !j.feeds) { throw new Error("no access"); }        // ThingSpeak answers -1 without the read key
+          var gotN = false, gotE = false;
+          for (var i = j.feeds.length - 1; i >= 0; i--) {            // newest entries first
+            var e = j.feeds[i], at = Date.parse(e.created_at);
+            var n = num(e["field" + f.field]), tc = num(e["field" + f.tempField]), rh = num(e["field" + f.humField]);
+            if (!gotN && n !== null) { applySensor(f.key, {count: n, capacity: f.capacity}, at); gotN = true; }
+            if (!gotE && (tc !== null || rh !== null)) { envLive[f.key] = {temp: tc, hum: rh, at: at}; gotE = true; }
+          }
+          ok++;
+        })
+        .catch(function () { failed++; })
+        .then(function () { if (--left === 0) { feedState = {tried: true, ok: ok, failed: failed}; refreshCrowd(); } });
+    });
+  }
+  setInterval(pollFeeds, 30e3);
+
+  window.setCrowd = function (key, value, opts) {
+    var doc = applySensor(key, value);
+    if (!doc) { return null; }
+    key = spotByKey(key).key;
+    refreshCrowd();
+    if (opts && opts.share && crowdDb) { crowdDb.doc("crowd/" + key).set(doc).catch(function () {}); }
+    return CROWD_LEVELS[crowdLevel(doc.pct)][0];
+  };
+  // try a counter without saving it for everyone: window.setFeeds([{channel: 1234567, key: "e4-food-court", capacity: 300}])
+  window.setFeeds = function (list) { setFeedConfig(list); return CROWD_FEEDS.length; };
+  window.crowdSpots = function () { return CROWD_SPOTS.map(function (s) { return {key: s.key, facility: s.fid || null, name: s.label, type: s.type, level: s.lv}; }); };
+
+  // ---------- live data from the group's Apps Script (Member 2) ----------
+  // The Arduinos post to the group's Apps Script, which keeps the latest reading per facility.
+  // GET LIVE_API?action=latest returns {count, facilities: [record, ...]}; one record per facility ID:
+  //   facility_id, current_occupancy, capacity, occupancy_pct, crowd_status,      (Crowd Management)
+  //   light_on, fan_pct, hvac,                                                   (Energy Saving / Environment)
+  //   temperature, humidity, comfort,                                            (Environment)
+  //   time ("dd/MM/yy HH:mm:ss"), ts, crowd_ts, energy_ts, env_ts (ms since 1970, when each part last changed)
+  // Any field can be missing; the map shows what it gets. Leave LIVE_API "" to switch this off.
+  // Test without boards: open index.html?mock=1 (uses data/mock_live.js).
+  var LIVE_API = "https://script.google.com/macros/s/AKfycbzlVsZVIWkLt818jMaaC5FyiXxicgMHUnufDmqna2tomFhcsaretr3Tu6svYqhBWqiJOQ/exec";
+  var LIVE_EVERY = 15e3;          // fetch every 15 s
+  var LIVE_STALE = 2 * 60e3;      // older than 2 min: warn that the data or the sensor is offline
+  var liveFac = {};               // spot key -> latest record, cleaned up by liveRec
+  var liveHist = {};              // spot key -> [{t, n}]: counts seen since the page opened
+  var liveState = {ok: 0, fails: 0, at: 0, err: "", mock: false};   // at = last good fetch
+  var COMFORT = {COLD: ["Cold", "--tcool"], COOL: ["Cool", "--tcool"], COMFY: ["Comfy", "--c0"], WARM: ["Warm", "--c2"], HOT: ["Hot", "--c3"], HUMID: ["Humid", "--thum"]};
+  var COMFORT_KEYS = ["COOL", "COMFY", "WARM", "HOT", "HUMID"];
+  // same thresholds as the Apps Script Settings tab, used when a record has no comfort label
+  var COMFY_LOW = 23.5, COMFY_HIGH = 26.5, TEMP_LOW = 22, TEMP_HIGH = 28, HUM_HIGH = 70;
+  function comfortOf(t, h) {
+    if (t === null || t === undefined) { return null; }
+    return t > TEMP_HIGH ? "HOT" : t > COMFY_HIGH ? "WARM" : t < TEMP_LOW ? "COLD" : t < COMFY_LOW ? "COOL" : (h !== null && h > HUM_HIGH ? "HUMID" : "COMFY");
+  }
+  // crowd_status words a board or script might send, as a % full for the map's colours
+  var STATUS_PCT = {EMPTY: 5, LOW: 20, QUIET: 20, GREEN: 20, NORMAL: 50, MODERATE: 50, MEDIUM: 50, ORANGE: 50, YELLOW: 50,
+                    HIGH: 75, BUSY: 75, CROWDED: 80, RED: 80, FULL: 95, PACKED: 95, OVERCROWDED: 100};
+  function two(n) { return ("0" + n).slice(-2); }
+  function hms(t) { var d = new Date(t); return two(d.getHours()) + ":" + two(d.getMinutes()) + ":" + two(d.getSeconds()); }
+  function parseDmy(v) {          // "11/11/26 14:03:12" (the Apps Script's time), read as this device's local time
+    var m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(String(v || ""));
+    if (!m) { return null; }
+    var y = Number(m[3]); if (y < 100) { y += 2000; }
+    var t = new Date(y, m[2] - 1, m[1], m[4], m[5], m[6] || 0).getTime();
+    return isFinite(t) ? t : null;
+  }
+  function onOff(v) {
+    if (v === true || v === 1) { return true; }
+    if (v === false || v === 0) { return false; }
+    var u = String(v === null || v === undefined ? "" : v).trim().toUpperCase();
+    return u === "ON" || u === "TRUE" || u === "1" || u === "YES" ? true : u === "OFF" || u === "FALSE" || u === "0" || u === "NO" ? false : null;
+  }
+  function liveRec(r) {
+    var sp = r && spotByKey(String(r.facility_id || r.facility || "").trim().toUpperCase());
+    if (!sp) { return null; }
+    var at = num(r.ts) || parseDmy(r.time) || Date.now();
+    function when(k) { return num(r[k]) || at; }
+    var pct = num(r.occupancy_pct), count = num(r.current_occupancy), cap = num(r.capacity);
+    if (pct !== null && pct <= 1 && count !== null && cap && count / cap > 0.02) { pct = pct * 100; }   // 0.83 meaning 83%
+    if (pct === null && count !== null && cap > 0) { pct = 100 * count / cap; }
+    var hv = String(r.hvac || "").trim().toUpperCase();
+    return {key: sp.key, fid: sp.fid, at: at, crowdAt: when("crowd_ts"), energyAt: when("energy_ts"), envAt: when("env_ts"),
+            count: count, capacity: cap > 0 ? cap : null, pct: pct, status: String(r.crowd_status || "").trim().toUpperCase(),
+            light: onOff(r.light_on), fan: num(r.fan_pct), hvac: hv,
+            temp: num(r.temperature), hum: num(r.humidity), comfort: String(r.comfort || "").trim().toUpperCase()};
+  }
+  function applyLive(list) {
+    var n = 0;
+    list.forEach(function (raw) {
+      var r = liveRec(raw);
+      if (!r) { return; }
+      n++;
+      // a record with only some parts (e.g. just the lights) keeps the other parts from before
+      var prev = liveFac[r.key];
+      if (prev) {
+        if (r.count === null && r.pct === null && !r.status) { r.count = prev.count; r.capacity = r.capacity || prev.capacity; r.pct = prev.pct; r.status = prev.status; r.crowdAt = prev.crowdAt; }
+        if (r.light === null && r.fan === null && !r.hvac) { r.light = prev.light; r.fan = prev.fan; r.hvac = prev.hvac; r.energyAt = prev.energyAt; }
+        if (r.temp === null && r.hum === null) { r.temp = prev.temp; r.hum = prev.hum; r.comfort = prev.comfort; r.envAt = prev.envAt; }
+      }
+      liveFac[r.key] = r;
+      if (r.count !== null && r.capacity) { applySensor(r.key, {count: r.count, capacity: r.capacity}, r.crowdAt); }
+      else if (r.pct !== null) { applySensor(r.key, r.pct, r.crowdAt); }
+      else if (STATUS_PCT[r.status] !== undefined) { applySensor(r.key, STATUS_PCT[r.status], r.crowdAt); }
+      if (r.count !== null) {
+        var hh = liveHist[r.key] || (liveHist[r.key] = []);
+        if (!hh.length || hh[hh.length - 1].t < r.crowdAt) { hh.push({t: r.crowdAt, n: r.count}); }
+        if (hh.length > 720) { hh.shift(); }
+      }
+      if (r.temp !== null || r.hum !== null) {
+        var cur = envLive[r.key];
+        if (!cur || r.envAt >= cur.at) { envLive[r.key] = {temp: r.temp, hum: r.hum, at: r.envAt, src: "live"}; }
+      }
+    });
+    return n;
+  }
+  function liveOnline() { return !!liveState.at && Date.now() - liveState.at < LIVE_STALE; }
+  function liveSummary() {
+    var n = Object.keys(liveFac).length;
+    if (liveState.mock) { return "Simulated live data (mock), updated " + hms(liveState.at) + ". " + n + " facilities."; }
+    if (!liveState.at) { return liveState.fails ? "Can't reach the live data (" + liveState.err + "). Showing estimates." : "Connecting to the live data…"; }
+    if (!liveOnline()) { return "Offline: no answer from the live data since " + hms(liveState.at) + ". Showing the last values."; }
+    return "Live from " + n + " sensor" + (n === 1 ? "" : "s") + " · updated " + hms(liveState.at);
+  }
+  // "● Live · updated 14:03:12", or a warning when the data or this facility's board has gone quiet
+  function liveBadge(r, part) {
+    var t = r[part] || r.at, old = Date.now() - t > LIVE_STALE, off = !liveOnline() || old;
+    var txt = !liveOnline() ? liveSummary()
+      : old ? "No new reading for " + Math.round((Date.now() - t) / 60e3) + " min (last " + hms(t) + "). The board may be offline."
+      : (liveState.mock ? "Simulated" : "Live") + " · updated " + hms(t);
+    return '<p class="lbadge' + (off ? " off" : "") + '"><i></i><span>' + esc(txt) + "</span></p>";
+  }
+  // lights (PIR), fan and HVAC for a facility
+  function roomSection(s) {
+    if (!s.fid || !(LIVE_API || liveState.mock)) { return ""; }
+    var r = liveFac[s.key], h = '<div class="psec"><h3>Lights, fan and HVAC</h3>';
+    if (!r || (r.light === null && r.fan === null && !r.hvac)) {
+      return h + '<p class="pnote">No energy data for ' + esc(s.fid) + " yet. Once the PIR lighting or fan board posts with facility_id \"" + esc(s.fid) + "\", it shows here.</p></div>";
+    }
+    var fan = r.fan === null ? null : Math.max(0, Math.min(100, Math.round(r.fan)));
+    var lvl = {OFF: 0, LOW: 1, MEDIUM: 2, HIGH: 3}[r.hvac];
+    return h + '<div class="psys">' +
+      "<div" + (r.light ? ' class="on"' : "") + "><b>" + (r.light === null ? "–" : r.light ? "ON" : "OFF") + "</b><small>Lights (PIR)</small></div>" +
+      "<div><b>" + (fan === null ? "–" : fan + "%") + "</b><small>Fan speed</small>" + (fan === null ? "" : '<div class="bar"><i style="width:' + fan + '%"></i></div>') + "</div>" +
+      "<div><b>" + esc(r.hvac || "–") + "</b><small>HVAC level</small>" + (lvl === undefined ? "" : '<div class="bar"><i style="width:' + (lvl * 100 / 3).toFixed(0) + '%"></i></div>') + "</div>" +
+      "</div>" + liveBadge(r, "energyAt") + "</div>";
+  }
+  // a mock reply for testing and as a demo backup: data/mock_live.js sets window.SIT_MOCK_LIVE
+  var mockTick = 0;
+  function mockReply() {
+    mockTick++;
+    return (window.SIT_MOCK_LIVE || []).map(function (r, i) {
+      var o = {}; for (var k in r) { o[k] = r[k]; }
+      if (typeof o.current_occupancy === "number") {
+        var swing = Math.round(Math.sin((mockTick + i * 3) / 4) * Math.max(2, (o.capacity || 20) * 0.15));
+        o.current_occupancy = Math.max(0, Math.min(o.capacity || 999, o.current_occupancy + swing));
+      }
+      if (typeof o.temperature === "number") { o.temperature = Math.round((o.temperature + Math.sin(mockTick / 6 + i) * 0.6) * 10) / 10; }
+      o.ts = Date.now();
+      return o;
+    });
+  }
+  var liveBusy = false;
+  function pollLive() {
+    if (!FEATURES.crowd || liveBusy || (document.hidden && liveState.at)) { return; }
+    if (window.SIT_MOCK_LIVE && (!LIVE_API || /[?&]mock=1/.test(location.search))) {
+      applyLive(mockReply());
+      liveState = {ok: liveState.ok + 1, fails: 0, at: Date.now(), err: "", mock: true};
+      refreshCrowd();
+      return;
+    }
+    if (!LIVE_API) { return; }
+    liveBusy = true;
+    var ctl = window.AbortController ? new AbortController() : null;
+    var tm = setTimeout(function () { if (ctl) { ctl.abort(); } }, 12e3);
+    fetch(LIVE_API + (LIVE_API.indexOf("?") < 0 ? "?" : "&") + "action=latest&_=" + Date.now(), ctl ? {signal: ctl.signal, cache: "no-store"} : {cache: "no-store"})
+      .then(function (r) { if (!r.ok) { throw new Error("HTTP " + r.status); } return r.json(); })
+      .then(function (j) {
+        var list = Array.isArray(j) ? j : j && j.facilities;
+        if (!Array.isArray(list)) { throw new Error((j && j.error) || "unexpected reply"); }
+        applyLive(list);
+        liveState = {ok: liveState.ok + 1, fails: 0, at: Date.now(), err: "", mock: false};
+      })
+      .catch(function (e) { liveState.fails++; liveState.err = e && e.name === "AbortError" ? "timed out" : String((e && e.message) || e); })
+      .then(function () { clearTimeout(tm); liveBusy = false; refreshCrowd(); });
+  }
+  setInterval(pollLive, LIVE_EVERY);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { pollLive(); } });
+  // console helpers for testing:
+  //   liveStatus()                       what the live loader has, and the last error
+  //   setLiveApi("https://.../exec")     read another Apps Script deployment (or "" to stop)
+  //   pushLive([{facility_id: "FCA", current_occupancy: 50, capacity: 60, light_on: true, fan_pct: 70, hvac: "HIGH", temperature: 29.1, humidity: 66}])
+  window.liveStatus = function () { return {api: LIVE_API, online: liveOnline(), lastOk: liveState.at ? hms(liveState.at) : null, fails: liveState.fails, error: liveState.err, mock: liveState.mock, facilities: Object.keys(liveFac).map(function (k) { return liveFac[k].fid; })}; };
+  window.setLiveApi = function (url) { LIVE_API = String(url || ""); liveFac = {}; liveHist = {}; liveState = {ok: 0, fails: 0, at: 0, err: "", mock: false}; pollLive(); return LIVE_API || "off"; };
+  window.pushLive = function (list) { var n = applyLive(Array.isArray(list) ? list : [list]); liveState.at = Date.now(); refreshCrowd(); return n + " applied"; };
+
+  // ---------- directions ----------
+  // The walking network: nodes on corridor centre lines per block side and level, joined by
+  // lifts, stairs, escalators and bridges. Edge = [a, b, length dm, kind, flags, bridge].
+  // kind 0 walk, 1 lift, 2 stairs, 3 escalator, 4 into/out of a lift car, 5 sloped path between levels;
+  // flags 1 open air, 2 steps, 4 open ground with no mapped path (a guess), 8 restricted building (E1)
+  var dir = {open: false, from: null, to: null, dry: false, flat: false, focus: "to", res: null};
+  var routeLayer = L.layerGroup();
+  var LV_ORDER = ["B", "1", "1M", "2", "2M", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
+  var LIFT_WAIT = 12;       // metres of walking a lift wait is worth, charged getting in and again getting out
+
+  function prepGraph(g) {
+    g.n = g.nx.length; g.adj = [];
+    for (var i = 0; i < g.n; i++) { g.adj.push([]); }
+    for (var k = 0; k < g.e.length; k += 6) { g.adj[g.e[k]].push(k); g.adj[g.e[k + 1]].push(k); }
+    g.deck = {};
+    g.bridges.forEach(function (nm, i) {
+      if (/^Y bridge/.test(nm)) { g.deck.Y = i; }
+      if (/^Bridge from W1/.test(nm)) { g.deck.J = i; }
+      if (/^Landbridge/.test(nm)) { g.deck.P = i; }
+      if (/^Campus Boulevard/.test(nm)) { g.deck.B = i; }
+    });
+    return g;
+  }
+  function nodeLL(i) { var o = GR.origin; return L.latLng(o[1] + GR.ny[i] / 10 / o[3], o[0] + GR.nx[i] / 10 / o[2]); }
+  function layerOf(i) { return GR.layers[GR.nl[i]]; }        // [side, level, level shown on the map]
+  function dispOf(i) { return layerOf(i)[2]; }
+  function blockOf(i) { return GR.nb[i] >= 0 ? GR.blocks[GR.nb[i]] : null; }
+  function placeName(i) {
+    var l = layerOf(i);
+    if (l[0] === "M") { return "Punggol Coast Mall, L2"; }
+    if (l[0] === "M1") { return "Punggol Coast Mall, Level 1"; }
+    if (l[0] === "MB") { return "Punggol Coast MRT, B1"; }
+    if (l[0] === "Y" || l[0] === "J") { return "Level 5 bridge"; }
+    if (l[0] === "P") { return "Landbridge, Level 2"; }
+    if (l[0] === "B") { return "Campus Boulevard, Level 2"; }
+    return (blockOf(i) ? blockOf(i) + " " : "") + levelName(l[1]);
+  }
+
+  // binary heap keyed on distance
+  function hpush(h, d, v) {
+    h.push([d, v]); var i = h.length - 1;
+    while (i > 0) { var p = (i - 1) >> 1; if (h[p][0] <= h[i][0]) { break; } var t = h[p]; h[p] = h[i]; h[i] = t; i = p; }
+  }
+  function hpop(h) {
+    var top = h[0], last = h.pop();
+    if (h.length) {
+      h[0] = last; var i = 0;
+      for (;;) {
+        var l = 2 * i + 1, r = l + 1, m = i;
+        if (l < h.length && h[l][0] < h[m][0]) { m = l; }
+        if (r < h.length && h[r][0] < h[m][0]) { m = r; }
+        if (m === i) { break; }
+        var t = h[m]; h[m] = h[i]; h[i] = t; i = m;
+      }
+    }
+    return top;
+  }
+  function shortest(src, dst, dry, flat, inside) {
+    var n = GR.n, E = GR.e, dist = new Float64Array(n), via = new Int32Array(n);
+    for (var i = 0; i < n; i++) { dist[i] = Infinity; via[i] = -1; }
+    var h = []; dist[src] = 0; hpush(h, 0, src);
+    while (h.length) {
+      var top = hpop(h), d = top[0], u = top[1];
+      if (d > dist[u]) { continue; }
+      if (u === dst) { break; }
+      var a = GR.adj[u];
+      for (var j = 0; j < a.length; j++) {
+        var k = a[j], v = E[k] === u ? E[k + 1] : E[k], kind = E[k + 3], fl = E[k + 4];
+        if (dry && (fl & 1)) { continue; }
+        if (flat && (kind === 2 || kind === 3 || (fl & 2))) { continue; }
+        if ((fl & 8) && !inside) { continue; }
+        // open ground the floor plans have no path for is a guess: count it as 1.5x its length,
+        // so a real walkway wins when the two are close (distances and times shown stay real)
+        var nd = d + E[k + 2] / 10 * (fl & 4 ? 1.5 : 1) + (kind === 4 ? LIFT_WAIT : 0);
+        if (nd < dist[v]) { dist[v] = nd; via[v] = k; hpush(h, nd, v); }
+      }
+    }
+    if (dist[dst] === Infinity) { return null; }
+    var nodes = [dst], edges = [], cur = dst;
+    while (cur !== src) { var k2 = via[cur]; edges.push(k2); cur = E[k2] === cur ? E[k2 + 1] : E[k2]; nodes.push(cur); }
+    nodes.reverse(); edges.reverse();
+    return {nodes: nodes, edges: edges};
+  }
+
+  function endpointFor(id) {
+    var e = registry[id], t = GR && GR.t[id];
+    if (!e || !t) { return null; }
+    return {id: id, name: e.name, node: t[0], ll: e.ll, door: t.length > 2 ? L.latLng(t[1], t[2]) : null, blk: e.blk || null};
+  }
+  function gpsEndpoint() {
+    if (!gps) { return null; }
+    var ll = gps.getLatLng(), best = -1, bd = Infinity;
+    for (var i = 0; i < GR.n; i++) {
+      var l = layerOf(i);
+      if (l[1] !== "1" && l[0] !== "M") { continue; }   // a phone or the Arduino GPS only works outdoors, at ground level
+      var d = nodeLL(i).distanceTo(ll);
+      if (d < bd) { bd = d; best = i; }
+    }
+    return best >= 0 && bd < 80 ? {id: "gps", name: "My location", node: best, ll: ll, door: null} : null;
+  }
+
+  function fmtM(m) { return m < 20 ? Math.max(5, Math.round(m / 5) * 5) + " m" : Math.round(m / 10) * 10 + " m"; }
+  function bridgeLabel(name) {
+    return /^Bridge from|^Bridge between/.test(name) ? "the " + name.charAt(0).toLowerCase() + name.slice(1)
+      : /^Bridge /.test(name) ? "the " + name.replace(/^Bridge /, "") + " bridge" : "the " + name.replace(/ \(.*\)$/, "");
+  }
+
+  // turn a node path into map lines and written steps
+  function summarise(r) {
+    var E = GR.e, runs = [], segs = [], seg = null, walk = 0, open = 0, secs = 0, rides = {lift: 0, stair: 0, escal: 0};
+    var cur = {disp: dispOf(r.nodes[0]), pts: [nodeLL(r.nodes[0])]};
+    for (var j = 0; j < r.edges.length; j++) {
+      var k = r.edges[j], a = r.nodes[j], b = r.nodes[j + 1];
+      var kind = E[k + 3], fl = E[k + 4], len = E[k + 2] / 10, br = E[k + 5], db = dispOf(b);
+      var vert = kind === 1 || kind === 2 || kind === 3, slope = kind === 5;
+      if (vert) { runs.push(cur); cur = {disp: db, pts: [nodeLL(b)]}; }
+      else if (db !== cur.disp) { runs.push(cur); cur = {disp: db, pts: [nodeLL(a), nodeLL(b)]}; }
+      else { cur.pts.push(nodeLL(b)); }
+      if (slope) {                     // a sloped path: walked, but it changes level, so it gets its own step
+        if (!seg || seg.t !== "slope") { seg = {t: "slope", from: a, to: b, hops: 1, len: 0}; segs.push(seg); }
+        seg.to = b; seg.len += len; walk += len; secs += len / 1.25;
+      } else if (vert) {
+        var t = kind === 1 ? "lift" : kind === 2 ? "stair" : "escal";
+        if (!seg || seg.t !== t) { seg = {t: t, from: a, to: b, hops: 0}; segs.push(seg); }
+        seg.to = b;
+        var hops = kind === 1 ? Math.max(1, Math.round(len / 4)) : kind === 2 ? Math.max(1, Math.round(len / 14)) : 1;
+        seg.hops += hops;
+        secs += kind === 1 ? 4 * hops : kind === 2 ? 15 * hops : 25;
+      } else {
+        var l = layerOf(b);
+        if (br < 0 && GR.deck[l[0]] !== undefined) { br = GR.deck[l[0]]; }
+        var key = br >= 0 ? "b" + br : l[0] + l[1];
+        if (!seg || seg.t !== "walk" || seg.key !== key) { seg = {t: "walk", key: key, br: br, from: a, to: b, len: 0, open: 0, blocks: {}}; segs.push(seg); }
+        seg.to = b; seg.len += len; walk += len; secs += len / 1.25;
+        if (fl & 1) { seg.open += len; open += len; }
+        if (kind === 4) { secs += 15; }
+        var bk = blockOf(b);
+        if (bk) { seg.blocks[bk] = (seg.blocks[bk] || 0) + len; }
+      }
+    }
+    runs.push(cur);
+    // the route starts and ends at the room itself, through its door
+    var f = dir.from, t2 = dir.to;
+    runs[0].pts = [f.ll].concat(f.door ? [f.door] : []).concat(runs[0].pts);
+    var last = runs[runs.length - 1];
+    last.pts = last.pts.concat(t2.door ? [t2.door] : []).concat([t2.ll]);
+
+    // tiny walking bits (a step onto a bridge, into a lift) fold into their neighbours
+    segs = segs.filter(function (s, i) { return s.t !== "walk" || s.len >= 4 || s.br >= 0 || segs.length === 1; });
+    // and what they separated joins up again (two escalators in a row, one corridor split by a landing)
+    var merged = [];
+    segs.forEach(function (s) {
+      var p = merged[merged.length - 1];
+      if (p && p.t === s.t && s.t !== "walk") { p.to = s.to; p.hops += s.hops; p.n = (p.n || 1) + 1; }
+      else if (p && p.t === "walk" && s.t === "walk" && p.key === s.key) {
+        p.to = s.to; p.len += s.len; p.open += s.open;
+        for (var k4 in s.blocks) { p.blocks[k4] = (p.blocks[k4] || 0) + s.blocks[k4]; }
+      } else { merged.push(s); }
+    });
+    segs = merged;
+    segs.forEach(function (s) { if (s.t !== "walk" && s.t !== "slope") { rides[s.t]++; } });
+    function topBlock(s) { var b = null, m = 0; for (var k3 in s.blocks) { if (s.blocks[k3] > m) { m = s.blocks[k3]; b = k3; } } return b; }
+    // a room's own block names the end, even when its door node sits just outside the outline
+    function endName(i, e) { var l = layerOf(i); return !blockOf(i) && e.blk && (l[0] === "E" || l[0] === "W") ? e.blk + " " + levelName(l[1]) : placeName(i); }
+    var steps = [{cls: "a", icon: "A", text: "Start at " + f.name, sub: f.id === "gps" ? "From the GPS fix" : endName(r.nodes[0], f), lv: dispOf(r.nodes[0]), ll: f.ll}];
+    var changes = [];
+    segs.forEach(function (s, i) {
+      var la = layerOf(s.from), lb = layerOf(s.to), st = {cls: "", lv: dispOf(s.to), ll: nodeLL(s.from)};
+      if (s.t === "walk") {
+        var nb = topBlock(s), nxt = segs[i + 1];
+        if (s.br >= 0 && /^(Walkway|Campus Court|Campus Boulevard)/.test(GR.bridges[s.br])) {
+          var nm = GR.bridges[s.br], court = /^Campus Court/.test(nm), blvd = /^Campus Boulevard/.test(nm);
+          var toB = nxt ? topBlock(nxt) || blockOf(nxt.from) : blockOf(s.to);
+          st.text = "Walk " + fmtM(s.len) + (court ? " across Campus Court" : blvd ? " along Campus Boulevard" : " along the walkway past E3") + (toB && !court && !blvd ? " to " + toB : "");
+          st.sub = (court ? "Open space between E2/E3 and the JTC blocks, " : blvd ? "Open walkway along the JTC blocks, " : "") + levelName(lb[1]) + (s.open >= 5 ? " · open air" : "");
+        } else if (s.br >= 0) {
+          var after = nxt ? topBlock(nxt) || (nxt.t === "walk" ? null : blockOf(nxt.from)) : null;
+          after = after || blockOf(s.to);
+          st.text = "Cross " + bridgeLabel(GR.bridges[s.br]) + (after && after !== blockOf(s.from) ? " to " + after : "");
+          st.sub = fmtM(s.len) + " · " + (lb[0] === "Y" || lb[0] === "J" ? "Level 5" : levelName(lb[1]));
+          st.ll = nodeLL(s.from);
+        } else if (lb[0] === "M" || lb[0] === "M1") {
+          st.text = "Walk into Punggol Coast Mall"; st.sub = fmtM(s.len) + (lb[0] === "M1" ? " · Level 1, from W1" : " · L2, off Campus Boulevard");
+        } else {
+          var b0 = blockOf(s.from), b1 = blockOf(s.to) || nb;
+          st.text = "Walk " + fmtM(s.len) + (s.open > s.len / 2 ? " outdoors" + (b1 && b1 !== b0 ? " to " + b1 : "")
+            : b0 && b1 && b0 !== b1 ? " from " + b0 + " to " + b1 : b1 ? " through " + b1 : "");
+          st.sub = (blockOf(s.to) || lb[0] !== "E" && lb[0] !== "W" ? placeName(s.to) : (b1 ? b1 + " " : "") + levelName(lb[1]))
+            + (s.open >= 5 ? " · " + fmtM(s.open) + " in the open" : "")
+            + (!dir.inside && b1 && (GR.restricted || []).indexOf(b1) >= 0 ? " · public corridor between the bridges" : "");
+        }
+      } else {
+        var up = LV_ORDER.indexOf(lb[1]) > LV_ORDER.indexOf(la[1]);
+        st.cls = "v";
+        if (s.t === "slope") {
+          var toLv = lb[0] === "P" ? "the Landbridge (Level 2)" : levelName(lb[1]);
+          st.text = "Take the slope " + (up ? "up" : "down") + " to " + toLv;
+          st.sub = "Campus Court, open space between E2/E3 and the JTC blocks";
+          changes.push({ll: nodeLL(s.from), text: "Slope " + (up ? "↑ " : "↓ ") + (lb[0] === "P" ? "L2" : "L" + lb[1])});
+        } else if (lb[0] === "MB") {
+          st.text = "Take the " + (s.t === "lift" ? "lift" : "escalator") + " down to B1 for Punggol Coast MRT";
+          st.sub = "Inside Punggol Coast Mall";
+          changes.push({ll: nodeLL(s.from), text: "MRT ↓ B1"});
+        } else if (lb[0] === "M") {
+          st.text = "Take the 2 escalators down to L2"; st.sub = "Ride one, walk a few steps, ride the second";
+          changes.push({ll: nodeLL(s.from), text: "Escalators ↓ L2"});
+        } else {
+          var what = s.t === "lift" ? "lift" : s.t === "stair" ? "stairs" : "escalator";
+          st.text = "Take the " + what + " " + (up ? "up" : "down") + " to " + levelName(lb[1]);
+          var lob = s.t === "lift" && GR.lobby && GR.lobby[s.from];
+          st.sub = (blockOf(s.from) ? blockOf(s.from) + " " : "") + (lob ? lob + ", " + levelName(la[1]) : what + " from " + levelName(la[1]));
+          changes.push({ll: nodeLL(s.from), text: (s.t === "lift" ? "Lift" : s.t === "stair" ? "Stairs" : "Escalator") + (up ? " ↑ " : " ↓ ") + (lb[1] === "B" ? "B" : "L" + lb[1])});
+        }
+      }
+      steps.push(st);
+    });
+    steps.push({cls: "b", icon: "B", text: "Arrive at " + t2.name, sub: endName(r.nodes[r.nodes.length - 1], t2), lv: dispOf(r.nodes[r.nodes.length - 1]), ll: t2.ll});
+    var n = 1;
+    steps.forEach(function (s) { if (!s.icon) { s.icon = String(n++); } });
+    var how = [];
+    if (rides.lift) { how.push(rides.lift === 1 ? "1 lift" : rides.lift + " lifts"); }
+    if (rides.stair) { how.push("stairs"); }
+    if (rides.escal) { how.push("escalator"); }
+    return {runs: runs, steps: steps, changes: changes, walk: walk, open: open, mins: Math.max(1, Math.round(secs / 60)), how: how};
+  }
+
+  function clearRoute() { routeLayer.clearLayers(); }
+  function drawRoute() {
+    routeLayer.clearLayers();
+    var res = dir.res;
+    if (!res || res.none) { return; }
+    res.lines = [];
+    res.runs.forEach(function (run) {
+      if (run.pts.length < 2) { return; }
+      var casing = L.polyline(run.pts, {renderer: routeSvg, pane: "route", interactive: false, lineCap: "round", lineJoin: "round"});
+      var line = L.polyline(run.pts, {renderer: routeSvg, pane: "route", interactive: false, lineCap: "round", lineJoin: "round"});
+      res.lines.push({run: run, casing: casing, line: line});
+      routeLayer.addLayer(casing); routeLayer.addLayer(line);
+    });
+    res.changes.forEach(function (c) {
+      routeLayer.addLayer(L.marker(c.ll, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null, html: '<div class="rchg">' + esc(c.text) + "</div>"})}));
+    });
+    routeLayer.addLayer(L.marker(dir.from.ll, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null, html: '<div class="rpin a"></div>'})}));
+    if (dir.to.id !== "mrt") {    // the NE18 badge already marks the station
+      routeLayer.addLayer(L.marker(dir.to.ll, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: null, html: '<div class="rpin b"></div>'})}));
+    }
+    styleRoute();
+  }
+  // this level's part of the route is solid; the parts on other levels are dotted
+  function styleRoute() {
+    if (!dir.res || !dir.res.lines) { return; }
+    dir.res.lines.forEach(function (o) {
+      var on = o.run.disp === null || o.run.disp === level;
+      o.casing.setStyle({color: tok("--route-casing"), weight: on ? 10 : 0, opacity: on ? 0.9 : 0});
+      o.line.setStyle({color: tok(on ? "--route" : "--route-off"), weight: on ? 6 : 3, opacity: on ? 1 : 0.85, dashArray: on ? null : "1 7"});
+      if (on) { o.casing.bringToFront(); o.line.bringToFront(); }
+    });
+  }
+  function fitRoute() {
+    var b = L.latLngBounds([]);
+    dir.res.runs.forEach(function (r) { r.pts.forEach(function (p) { b.extend(p); }); });
+    var pad = isPhone() ? {paddingTopLeft: [24, 50], paddingBottomRight: [60, sheetPeek() + 24]} : {paddingTopLeft: [panelPx() + 30, 76], paddingBottomRight: [100, 40]};
+    pad.maxZoom = 20.5;
+    map.fitBounds(b, pad);
+  }
+
+  function computeRoute() {
+    dir.res = null; clearRoute();
+    if (!dir.from || !dir.to) { renderDirList(); return; }
+    var note = "", r = null;
+    // restricted blocks (E1) are only walked through when the trip starts or ends inside one
+    var rs = GR.restricted || [], inside = [dir.from.blk, dir.to.blk, blockOf(dir.from.node), blockOf(dir.to.node)]
+      .some(function (b) { return b && rs.indexOf(b) >= 0; });
+    dir.inside = inside;
+    if (dir.from.node !== dir.to.node) {
+      r = shortest(dir.from.node, dir.to.node, dir.dry, dir.flat, inside);
+      if (!r && (dir.dry || dir.flat)) {
+        r = shortest(dir.from.node, dir.to.node, false, false, inside);
+        if (r) {
+          note = dir.dry && !dir.flat ? "No fully sheltered route in the floor plans, so part of this one is in the open."
+            : !dir.dry ? "No step-free route in the floor plans, so this one uses stairs or an escalator."
+            : "No sheltered, step-free route in the floor plans. This is the closest there is.";
+        }
+      }
+    } else {
+      r = {nodes: [dir.from.node], edges: []};
+    }
+    if (!r) { dir.res = {none: true}; renderDirList(); return; }
+    dir.res = summarise(r); dir.res.note = note;
+    var lv0 = null;
+    for (var i = 0; i < dir.res.runs.length && lv0 === null; i++) { lv0 = dir.res.runs[i].disp; }
+    if (lv0 && lv0 !== level) { drawLevel(lv0); }
+    drawRoute(); renderDirList(); fitRoute();
+  }
+
+  function renderDirList() {
+    updateDirMini();
+    var sum = $("dirSum"), list = $("list");
+    list.innerHTML = "";
+    if (!dir.res) {
+      sum.hidden = true;
+      var n = document.createElement("p"); n.className = "note";
+      n.textContent = !dir.from && !dir.to ? "Pick a start and a destination. Tap a room on the map and choose Go here, or search above."
+        : !dir.from ? "Now pick where you're starting from." : "Now pick where you're going.";
+      list.appendChild(n); setPeek(); return;
+    }
+    sum.hidden = false;
+    if (dir.res.none) {
+      sum.innerHTML = '<span class="warn">No walking route between these two in the floor plans.</span><small>The file is missing a link for one of them. Try the nearest lift lobby or the block instead.</small>';
+      setPeek(); return;
+    }
+    var R = dir.res;
+    sum.innerHTML = "<b>" + R.mins + " min</b> " + esc(fmtM(R.walk)) + " walk" + (R.how.length ? " · " + esc(R.how.join(", ")) : "") +
+      (R.open >= 5 ? '<small>' + esc(fmtM(R.open)) + " in the open air" + (dir.dry ? "" : ". Turn on Avoid rain to stay under cover where possible") + "</small>" : "<small>Under cover the whole way</small>") +
+      (R.note ? '<small class="warn">' + esc(R.note) + "</small>" : "");
+    var ol = document.createElement("ol"); ol.className = "steps";
+    R.steps.forEach(function (s) {
+      var li = document.createElement("li");
+      li.className = "step " + s.cls; li.tabIndex = 0;
+      li.innerHTML = '<span class="sic">' + esc(s.icon) + "</span><div>" + esc(s.text) + "<small>" + esc(s.sub || "") + "</small></div>" +
+        (s.lv ? '<span class="slv">' + (s.lv === "B" ? "B" : "L" + esc(s.lv)) + "</span>" : "");
+      li.onclick = function () { if (s.lv && s.lv !== level) { drawLevel(s.lv); } flyTo(s.ll, 20); closeSheet(); };
+      li.onkeydown = function (ev) { if (ev.key === "Enter") { li.onclick(); } };
+      ol.appendChild(li);
+    });
+    list.appendChild(ol);
+    setPeek();
+  }
+
+  // search list for the start / destination boxes
+  function renderPick(q) {
+    var list = $("list"), which = dir.focus;
+    list.innerHTML = "";
+    q = (q || "").trim().toLowerCase();
+    var cur = dir[which];
+    if (cur && q === cur.name.toLowerCase()) { q = ""; }
+    function pick(e) { setEnd(which, e.id === "gps" ? gpsEndpoint() : endpointFor(e.id)); }
+    if (which === "from" && gps && !q) {
+      addItem({id: "gps", tag: "poi", code: "GPS", name: "My location", sub: "Nearest ground-level path to the GPS dot"}, pick);
+    }
+    var shown = 0;
+    if (!q) {
+      Object.keys(registry).forEach(function (k) { var e = registry[k]; if (GR.t[k] && (e.building || e.tag === "nel")) { addItem(e, pick); shown++; } });
+    } else {
+      matches(q, function (k) { return !!GR.t[k]; }).forEach(function (e) { addItem(e, pick); shown++; });
+    }
+    if (q && !shown) {
+      var n = document.createElement("p"); n.className = "note";
+      n.textContent = "Nothing matches “" + q + "”. Try a room code like SR202, a lab name, or a block like E6.";
+      list.appendChild(n);
+    }
+  }
+  function syncDirInputs() {
+    $("dirFrom").value = dir.from ? dir.from.name : "";
+    $("dirTo").value = dir.to ? dir.to.name : "";
+  }
+  function setEnd(which, ep) {
+    if (!ep) { return; }
+    dir[which] = ep; syncDirInputs();
+    $(which === "from" ? "dirFrom" : "dirTo").blur();
+    if (dir.from && dir.to) { computeRoute(); closeSheet(); }
+    else { focusDir(which === "from" ? "to" : "from"); }
+  }
+  function focusDir(which) {
+    dir.focus = which;
+    var inp = $(which === "from" ? "dirFrom" : "dirTo");
+    inp.focus(); renderPick(inp.value);
+    if (isPhone()) { setSheet(true); }
+  }
+  function openDir(o) {
+    if (!GR) { return; }
+    closeMenu(); $("search").blur();
+    dir.open = true;
+    clearSelection();
+    setView("dir");
+    if (o && o.to) { dir.to = endpointFor(o.to); }
+    if (o && o.from) { dir.from = endpointFor(o.from); }
+    if (o && o.to && !dir.from && gps) { dir.from = gpsEndpoint(); }      // GPS on: start from where you are
+    syncDirInputs();
+    if (dir.from && dir.to) { computeRoute(); }
+    else { dir.res = null; clearRoute(); renderDirList(); if (o) { focusDir(!dir.from ? "from" : "to"); } }
+    setPeek();
+  }
+  function closeDir(keepView) {
+    dir.open = false; dir.from = dir.to = dir.res = null; clearRoute();
+    $("dir").hidden = true; $("dirSum").hidden = true;
+    if (keepView !== true) { setView("none"); }
+  }
+  $("chipDir").onclick = function () { if (dir.open) { closeDir(); } else { openDir(null); } };
+  $("dirClose").onclick = function () { closeDir(); };
+  $("dirSwap").onclick = function () { var t = dir.from; dir.from = dir.to; dir.to = t; syncDirInputs(); computeRoute(); };
+  ["from", "to"].forEach(function (which) {
+    var inp = $(which === "from" ? "dirFrom" : "dirTo");
+    inp.addEventListener("focus", function () {
+      dir.focus = which; renderPick(inp.value);
+      if (isPhone()) { setSheet(true); }
+    });
+    inp.addEventListener("input", function () { dir.focus = which; renderPick(inp.value); });
+    inp.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") { var first = $("list").querySelector(".item"); if (first) { first.onclick(); } }
+      if (ev.key === "Escape") { inp.blur(); syncDirInputs(); renderDirList(); }
+    });
+  });
+  $("chipDry").onclick = function () { dir.dry = !dir.dry; this.setAttribute("aria-pressed", dir.dry); if (dir.from && dir.to) { computeRoute(); } };
+  $("chipFlat").onclick = function () { dir.flat = !dir.flat; this.setAttribute("aria-pressed", dir.flat); if (dir.from && dir.to) { computeRoute(); } };
+
+  // for the IoT side: route from the live GPS dot to a room id, e.g. window.routeTo("u-5-12")
+  window.routeTo = function (id) { var g = gpsEndpoint(); openDir({to: id}); if (g) { setEnd("from", g); } };
+
+  // ---------- GPS hook for the Arduino (NEO-6M) ----------
+  var gps = null, gpsRing = null;
+  window.showGps = function (lat, lon, accuracyM) {
+    var ll = L.latLng(lat, lon);
+    if (!gps) {
+      gps = L.marker(ll, {pane: "labels", interactive: false, icon: L.divIcon({className: "", iconSize: [16, 16], html: '<div class="gps"></div>'})}).addTo(map);
+      gpsRing = L.circle(ll, {radius: accuracyM || 5, renderer: canvas, color: "#2f5da8", weight: 1, fillOpacity: 0.12, interactive: false}).addTo(map);
+    }
+    gps.setLatLng(ll); gpsRing.setLatLng(ll); if (accuracyM) { gpsRing.setRadius(accuracyM); }
+    return ll;
+  };
+  window.clearGps = function () { if (gps) { map.removeLayer(gps); map.removeLayer(gpsRing); gps = gpsRing = null; } };
+
+  // ---------- my location: the phone's GPS (the button above the zoom buttons) ----------
+  // Tap: start, and centre on the blue dot. Tap again: centre on it again, or stop if it's already centred.
+  // GPS is only good outdoors (about 5-10 m) and can't tell floors apart, so the dot is treated as ground level.
+  var gpsWatch = null, gpsFirst = false, toastTimer = null;
+  function toast(msg, ms) {
+    var st = $("status");
+    st.textContent = msg; st.classList.add("on");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { st.classList.remove("on"); }, ms || 5000);
+  }
+  function setLocate(state) {
+    var b = $("locate"), lab = state === "on" ? "Centre on my location (tap again to stop)" : "Show my location";
+    b.classList.toggle("busy", state === "busy"); b.classList.toggle("on", state === "on");
+    b.setAttribute("aria-label", lab); b.title = lab;
+  }
+  function stopLocate() {
+    if (gpsWatch !== null) { navigator.geolocation.clearWatch(gpsWatch); gpsWatch = null; }
+    window.clearGps(); setLocate("off");
+  }
+  function visibleCentre() {
+    var sz = map.getSize();
+    return isPhone() ? L.point(sz.x / 2, (112 + sz.y - sheetPx()) / 2) : L.point((sz.x + panelPx()) / 2, (sz.y + 56) / 2);
+  }
+  function centreOnGps() { if (gps) { flyTo(gps.getLatLng(), Math.max(map.getZoom(), 19)); } }
+  $("locate").onclick = function () {
+    if (gpsWatch !== null) {
+      if (gps && map.latLngToContainerPoint(gps.getLatLng()).distanceTo(visibleCentre()) > 40) { centreOnGps(); } else { stopLocate(); }
+      return;
+    }
+    if (!navigator.geolocation) { toast("This browser can't share your location."); return; }
+    setLocate("busy"); gpsFirst = true;
+    gpsWatch = navigator.geolocation.watchPosition(function (p) {
+      var c = p.coords, ll = window.showGps(c.latitude, c.longitude, c.accuracy);
+      setLocate("on");
+      if (!gpsFirst) { return; }
+      gpsFirst = false;
+      var far = boundsOfAll().getCenter().distanceTo(ll);
+      if (far > 1500) { toast("You're " + (far / 1000).toFixed(1) + " km from campus. The blue dot shows where you are.", 6000); return; }
+      centreOnGps();
+      if (c.accuracy > 60) { toast("GPS is rough here (±" + Math.round(c.accuracy) + " m). It's sharper outdoors."); }
+    }, function (err) {
+      stopLocate();
+      toast(err.code === 1 ? "Location is blocked for this page. Allow it in your browser's site settings. (The claude.ai preview may not allow it at all.)"
+        : err.code === 3 ? "GPS took too long. Try again outdoors." : "Can't get a GPS fix here. Try again outdoors.", 7000);
+    }, {enableHighAccuracy: true, maximumAge: 5000, timeout: 20000});
+  };
+
+  // ---------- start ----------
+  $("status").classList.add("on");
+  if (!FEATURES.crowd) { $("chipCrowd").hidden = true; }
+  if (!FEATURES.directions) { $("chipDir").hidden = true; document.querySelector("#sbar .sep").hidden = true; }
+  Promise.all([getJSON("floors", "data/sit_floors.json"), getJSON("extras", "data/sit_extras.geojson")])
+    .then(function (res) {
+      D = res[0]; X = res[1];
+      $("status").classList.remove("on");
+      var fl = $("floors");
+      D.levels.slice().reverse().forEach(function (lv) {
+        var b = document.createElement("button");
+        b.textContent = lv; b.dataset.lv = lv; b.setAttribute("aria-label", levelName(lv));
+        b.onclick = function () {
+          clearSelection(); drawLevel(lv);
+          if (activeCat && activeCat.perLevel && (view === "place" || view === "cat")) { openCat(activeCat); }   // nearest on this level
+        };
+        fl.appendChild(b);
+      });
+      drawStatic();
+      labelLayer.addTo(map);
+      routeLayer.addTo(map);
+      pinLayer.addTo(map);
+      setView("none");
+      var v = load("sitwf-view"), lv = load("sitwf-level");
+      if (v && v.c && v.z) { map.setView(v.c, v.z, {animate: false}); } else { fitCampus(false); }
+      drawLevel(lv && D.units[lv] ? lv : "1");
+      if (FEATURES.crowd) { connectCrowd(); pollFeeds(); pollLive(); }
+      if (FEATURES.directions) {
+        getJSON("graph", "data/sit_graph.json").then(function (g) { GR = prepGraph(g); }).catch(function () { $("chipDir").hidden = true; });
+      }
+    })
+    .catch(function (err) {
+      $("status").textContent = "The floor plans did not load. Reload the page to try again.";
+    });
+})();
+</script>
+
+</html>

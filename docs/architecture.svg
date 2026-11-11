@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 390" font-family="Arial, Helvetica, sans-serif" font-size="13">
+  <rect width="960" height="390" fill="#ffffff"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5f6368"/></marker>
+  </defs>
+  <text x="24" y="34" font-size="18" font-weight="bold" fill="#1f4e79">SIT Smart Campus: how live data reaches the map</text>
+  <!-- boards -->
+  <g fill="#e8f0fe" stroke="#1a73e8">
+    <rect x="24" y="70" width="190" height="52" rx="8"/><rect x="24" y="134" width="190" height="52" rx="8"/>
+    <rect x="24" y="198" width="190" height="52" rx="8"/><rect x="24" y="262" width="190" height="52" rx="8"/>
+  </g>
+  <g fill="#202124"><text x="38" y="92" font-weight="bold">Crowd board</text><text x="38" y="110" fill="#5f6368">radar / IR doorway count</text>
+    <text x="38" y="156" font-weight="bold">PIR lighting board</text><text x="38" y="174" fill="#5f6368">light ON / OFF</text>
+    <text x="38" y="220" font-weight="bold">Fan / HVAC board</text><text x="38" y="238" fill="#5f6368">fan %, OFF/LOW/MED/HIGH</text>
+    <text x="38" y="284" font-weight="bold">Temp / humidity board</text><text x="38" y="302" fill="#5f6368">DHT22, sound level</text></g>
+  <!-- apps script -->
+  <rect x="300" y="110" width="210" height="150" rx="10" fill="#fef7e0" stroke="#c99700"/>
+  <text x="316" y="136" font-weight="bold" fill="#202124">Google Apps Script</text>
+  <text x="316" y="158" fill="#202124">doPost: checks API key and</text><text x="316" y="176" fill="#202124">facility ID, logs a row,</text>
+  <text x="316" y="194" fill="#202124">keeps the latest per facility</text>
+  <text x="316" y="222" fill="#202124">doGet ?action=latest:</text><text x="316" y="240" fill="#202124">one JSON for every facility</text>
+  <!-- sheet -->
+  <rect x="300" y="292" width="250" height="70" rx="10" fill="#e6f4ea" stroke="#1f9d5c"/>
+  <text x="316" y="316" font-weight="bold" fill="#202124">Google Sheet</text>
+  <text x="316" y="336" fill="#5f6368">Environment, Crowd Management,</text><text x="316" y="352" fill="#5f6368">Energy Saving, Facilities tabs</text>
+  <!-- website -->
+  <rect x="610" y="110" width="320" height="150" rx="10" fill="#fce8e6" stroke="#d93025"/>
+  <text x="626" y="136" font-weight="bold" fill="#202124">Campus map website (GitHub Pages)</text>
+  <text x="626" y="158" fill="#202124">fetch every 15 s</text>
+  <text x="626" y="180" fill="#202124">rooms and markers coloured by crowd</text>
+  <text x="626" y="202" fill="#202124">panel: count, temp, humidity, comfort,</text>
+  <text x="626" y="220" fill="#202124">lights, fan %, HVAC level</text>
+  <text x="626" y="242" fill="#202124">"updated hh:mm:ss", offline after 2 min</text>
+  <!-- arrows -->
+  <g stroke="#5f6368" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M214,96 C260,96 260,150 298,160"/><path d="M214,160 L298,172"/><path d="M214,224 L298,200"/><path d="M214,288 C260,288 260,232 298,222"/>
+    <path d="M405,260 L405,290"/><path d="M512,185 L608,185"/>
+  </g>
+  <text x="222" y="70" fill="#5f6368">HTTPS POST JSON, every 15-60 s</text>
+  <text x="560" y="176" fill="#5f6368" text-anchor="middle">JSON</text>
+  <text x="414" y="280" fill="#5f6368">appendRow</text>
+</svg>

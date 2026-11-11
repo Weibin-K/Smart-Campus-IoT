@@ -1,0 +1,24 @@
+facility_id,name,category,building,level,map_key,notes
+GYM,Gym 1,Gym,E5,5,e5-gym-1,
+GYM2,Gym 2,Gym,E5,6,e5-gym-2,
+GYM3,Outdoor Gym,Gym,E5,7,e5-outdoor-gym,Outdoor
+GYM4,GYM,Gym,E1,2M,e1-gym,E1 usually staff-only
+LIB,Learning Commons,Library,W1,5,w1-learning-commons,Book Drop and LOLA Smart Locker also on this level
+LIB2,Book Collection,Library,W1,5,w1-book-collection,
+LIB3,Library Amphitheatre,Library,W1,3-5,w1-library-amphitheatre,"Labelled on L3, L4 and L5 over the same footprint"
+LIB4,Lounge Library,Library,E1,3,e1-lounge-library,In E1
+FCA,E4 Food Court,Food court,E4,1,e4-food-court,Stalls 01-12 and a Drink Stall inside
+FCB,W3 Food Court,Food court,W3,2,w3-food-court,Two joined food-court units
+FCC,Takeaway Kiosk,Food court,E1,1,e1-takeaway-kiosk,Same spot as a CAFE pop-up unit
+FCD,Restaurant - Coming Soon,Food court,E3,1,,Not on the map's crowd list yet (coming soon)
+E2L2M,E2 L2M Study Space,Study space,E2,2M,e2-l2m-study,Also E2 L2M Project Hub
+E2L5A,E2 L5 Study Space 1,Study space,E2,5,e2-l5-study-1,Also Chua Thian Poh Discovery Hub 2
+E2L5B,E2 L5 Study Space 2,Study space,E2,5,e2-l5-study-2,Also Chua Thian Poh Discovery Hub 3
+E2L7,E2 L7 Study Space,Study space,E2,7,e2-l7-study,
+E2L9,E2 L9 Study Space,Study space,E2,9,e2-l9-study,
+E6L6,E6 L6 Study Space,Study space,E6,6,e6-l6-study,
+E6L7,E6 L7 Study Space,Study space,E6,7,e6-l7-study,Enclosed
+E6L8,E6 L8 Study Space,Study space,E6,8,e6-l8-study,
+E6L9,E6 L9 Study Space,Study space,E6,9,e6-l9-study,Enclosed
+W1L5,W1 L5 Project Hub,Study space,W1,5,w1-l5-project-hub,Study space per SIT extended-hours poster
+W1L6,W1 L6 Project Hub,Study space,W1,6,w1-l6-project-hub,Study space per SIT extended-hours poster
