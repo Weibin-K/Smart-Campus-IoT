@@ -1,4 +1,4 @@
-# SIT Smart Campus map: website integration (Members 1 and 2)
+# SIT Smart Campus map: website integration
 
 The campus map with **directions and live crowd, energy and environment data**, ready for GitHub Pages.
 It reads the group's Google Apps Script every 15 s and shows each facility's live count, crowd colour,
