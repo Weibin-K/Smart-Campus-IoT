@@ -23,8 +23,8 @@
 #include <HTTPClient.h>
 
 // ---------- change these ----------
-const char WIFI_SSID[] = "your-wifi-name";
-const char WIFI_PASS[] = "your-wifi-password";
+const char WIFI_SSID[] = "Weibin";
+const char WIFI_PASS[] = "3141592654";
 const char SCRIPT_URL[] = "https://script.google.com/macros/s/AKfycbzlVsZVIWkLt818jMaaC5FyiXxicgMHUnufDmqna2tomFhcsaretr3Tu6svYqhBWqiJOQ/exec";
 const char API_KEY[] = "YOUR_ENV_API_KEY";     // the ENV_API_KEY script property
 const char FACILITY_ID[] = "FCA";              // must be in the Facilities tab
