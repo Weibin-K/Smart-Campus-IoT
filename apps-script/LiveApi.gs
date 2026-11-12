@@ -1,5 +1,8 @@
 // =====================================================================================
-//  LIVE MAP API  (Member 2, tasks W02 + W05)
+//  LIVE MAP API  v2 (tracker W04)
+//  v2, 12/11/26: reads Nasrah's Crowd Management tab (Max Occupancy, Booking, Data Source),
+//  falls back to the Environment tab when there is no latest_<ID> property, finds the header row
+//  even under a title row, adds brightness / mode for the room controls, and adds checkW04().
 //  One JSON for the campus map: crowd + energy + environment per facility.
 //
 //  Where it goes: the Environment Logger Apps Script project (the one with Code.gs,
@@ -24,29 +27,48 @@ const LIVE_CROWD_SHEET_ID = "";            // "" = same spreadsheet as SHEET_ID.
 const LIVE_ENERGY_SHEET_ID = "";           // "" = same spreadsheet as SHEET_ID
 const LIVE_TAB_CROWD = "Crowd Management";
 const LIVE_TAB_ENERGY = "Energy Saving";
+const LIVE_TAB_ENV = "Environment";
+const LIVE_EXPECT = ["FCA", "FCB", "LIB", "STB", "GYM", "DR1", "DR2", "DR3"];   // W04 is done when all of these show
 const LIVE_SCAN_ROWS = 400;                // how many of the newest rows to read in each tab
 const LIVE_CACHE_SECONDS = 10;             // many phones polling every 15 s share one sheet read
 const LIVE_LOG = true;                     // livePost also appends a row to the two log tabs below
 const LIVE_TAB_CROWD_LOG = "Crowd Live Log";
 const LIVE_TAB_ENERGY_LOG = "Energy Live Log";
 
-// Header names to look for in row 1 of each tab, case does not matter.
+// Header names to look for in each tab's header row, case does not matter.
 // An exact match wins, then a header that contains the text. Put your real header first if it differs.
+// Fields are matched in the order listed, and each column is used once, so the more specific
+// headers (Booking End Time, Booking Status) are claimed before the general ones (Timestamp, Status).
 const LIVE_COLUMNS = {
   crowd: {
-    facility: ["facility id", "facility_id", "facility", "location id"],
-    time:     ["timestamp", "time", "date"],
-    pct:      ["occupancy (%)", "occupancy %", "occupancy_pct", "percent", "%"],
-    status:   ["crowd status", "crowd_status", "status"],
-    count:    ["current occupancy", "current_occupancy", "people inside", "occupancy", "count", "people"],
-    capacity: ["capacity", "max capacity"]
+    facility:   ["facility id", "facility_id", "facility", "location id", "location"],
+    bookingEnd: ["booking end time", "booking end", "booking_end"],
+    booking:    ["booking status", "booking_status", "booking"],
+    source:     ["data source", "data_source", "source"],
+    time:       ["timestamp", "last updated", "time", "date"],
+    pct:        ["occupancy (%)", "occupancy %", "occupancy_pct", "percent", "%"],
+    status:     ["crowd status", "crowd_status", "status"],
+    count:      ["current occupancy", "current_occupancy", "people inside", "occupancy", "count", "people"],
+    capacity:   ["max occupancy", "max_occupancy", "capacity", "max capacity"]
   },
   energy: {
-    facility: ["facility id", "facility_id", "facility", "location id"],
-    time:     ["timestamp", "time", "date"],
-    light:    ["light status", "light_on", "lights", "light", "led", "pir"],
-    fan:      ["fan speed (%)", "fan_pct", "fan %", "fan speed", "fan"],
-    hvac:     ["hvac setting", "hvac level", "hvac"]
+    facility:   ["facility id", "facility_id", "facility", "location id", "location"],
+    time:       ["timestamp", "time", "date"],
+    bright:     ["brightness (%)", "brightness", "light level"],
+    mode:       ["control mode", "mode"],
+    light:      ["light status", "light_on", "lights", "light", "led", "pir"],
+    fan:        ["fan speed (%)", "fan_pct", "fan %", "fan speed", "fan"],
+    hvac:       ["hvac setting", "hvac level", "hvac"]
+  },
+  env: {
+    facility:   ["facility id", "facility_id", "facility", "location id", "location"],
+    time:       ["timestamp", "time", "date"],
+    temp:       ["temperature (°c)", "temperature (c)", "temperature", "temp"],
+    hum:        ["humidity (%)", "humidity", "rh"],
+    sound:      ["sound level", "sound", "noise"],
+    comfort:    ["comfort status", "comfort"],
+    hvac:       ["hvac setting", "hvac level", "hvac"],
+    fan:        ["fan speed (%)", "fan_pct", "fan speed", "fan"]
   }
 };
 
@@ -93,6 +115,19 @@ function buildLive_() {
     if (v.hvac) { r.hvac = v.hvac; }
     r.env_ts = v.ts || parseTime_(v.time, tz);
   }
+  // 1b. environment from the Environment tab, for any facility without a newer latest_<ID>
+  const envRows = newestRows_(SHEET_ID, LIVE_TAB_ENV, LIVE_COLUMNS.env, tz);
+  for (const id in envRows) {
+    const g = envRows[id], r = rec(id);
+    if (r.env_ts && g.ts && r.env_ts >= g.ts) { continue; }
+    if (toNum_(g.temp) !== null) { r.temperature = toNum_(g.temp); }
+    if (toNum_(g.hum) !== null) { r.humidity = toNum_(g.hum); }
+    if (toNum_(g.sound) !== null) { r.sound_level = toNum_(g.sound); }
+    if (g.comfort) { r.comfort = String(g.comfort).trim().toUpperCase(); }
+    if (g.hvac) { r.hvac = normHvac_(g.hvac); }
+    if (toNum_(g.fan) !== null) { r.fan_pct = Math.max(0, Math.min(100, Math.round(toNum_(g.fan)))); }
+    r.env_ts = g.ts || r.env_ts || null;
+  }
 
   // 2. crowd: newest row per facility in the Crowd Management tab, and crowd_<ID> from livePost
   const crowd = newestRows_(LIVE_CROWD_SHEET_ID || SHEET_ID, LIVE_TAB_CROWD, LIVE_COLUMNS.crowd, tz);
@@ -114,6 +149,9 @@ function buildLive_() {
     if (pct !== null) { r.occupancy_pct = Math.round(pct); }
     const st = String(c.status || c.crowd_status || "").trim().toUpperCase();
     r.crowd_status = st || (pct === null ? "" : crowdStatus_(pct));
+    if (c.booking) { r.booking = String(c.booking).trim().toUpperCase().replace(/[\s-]+/g, "_"); }
+    if (c.bookingEnd) { r.booking_end = c.bookingEnd instanceof Date ? Utilities.formatDate(c.bookingEnd, tz, "HH:mm") : String(c.bookingEnd); }
+    if (c.source) { r.source = String(c.source).trim().toUpperCase(); }
     r.crowd_ts = c.ts || null;
   }
 
@@ -130,9 +168,14 @@ function buildLive_() {
     const light = onOff_(g.light !== undefined ? g.light : g.light_on);
     if (light !== null) { r.light_on = light; }
     const fan = toNum_(g.fan !== undefined ? g.fan : g.fan_pct);
+    if (g.bright === undefined && g.brightness !== undefined) { g.bright = g.brightness; }
     if (fan !== null) { r.fan_pct = Math.max(0, Math.min(100, Math.round(fan))); }
-    const hv = String(g.hvac || "").trim().toUpperCase();
+    const hv = normHvac_(g.hvac);
     if (hv) { r.hvac = hv; }
+    const br = toNum_(g.bright !== undefined ? g.bright : g.brightness);
+    if (br !== null) { r.brightness = Math.max(0, Math.min(100, Math.round(br))); }
+    const md = String(g.mode || "").trim().toUpperCase();
+    if (md === "AUTO" || md === "MANUAL") { r.mode = md; }
     r.energy_ts = g.ts || null;
   }
 
@@ -192,8 +235,18 @@ function livePost(p) {
         if (f === null || f < 0 || f > 100) { return { success: false, error: "Invalid fan_pct (0-100)" }; }
         v.fan = f;
       }
+      if (p.brightness !== undefined) {
+        const b = toNum_(p.brightness);
+        if (b === null || b < 0 || b > 100) { return { success: false, error: "Invalid brightness (0-100)" }; }
+        v.bright = b;
+      }
+      if (p.mode !== undefined) {
+        const m = String(p.mode).toUpperCase();
+        if (m !== "AUTO" && m !== "MANUAL") { return { success: false, error: "Invalid mode (AUTO or MANUAL)" }; }
+        v.mode = m;
+      }
       if (p.hvac !== undefined) {
-        const h = String(p.hvac).toUpperCase();
+        const h = normHvac_(p.hvac);
         if (["OFF", "LOW", "MEDIUM", "HIGH"].indexOf(h) === -1) { return { success: false, error: "Invalid hvac" }; }
         v.hvac = h;
       }
@@ -218,7 +271,14 @@ function newestRows_(sheetId, tab, cols, tz) {
   if (!sh) { return found; }
   const last = sh.getLastRow(), width = sh.getLastColumn();
   if (last < 2 || width < 1) { return found; }
-  const head = sh.getRange(1, 1, 1, width).getValues()[0].map(h => String(h).trim().toLowerCase());
+  // the header row is the first of the top 5 rows that has a facility column (a title row may sit above it)
+  const top = sh.getRange(1, 1, Math.min(5, last), width).getValues();
+  let headRow = 0;
+  for (let i = 0; i < top.length; i++) {
+    const t = top[i].map(h => String(h).trim().toLowerCase());
+    if (cols.facility.some(n => t.indexOf(n) >= 0)) { headRow = i; break; }
+  }
+  const head = top[headRow].map(h => String(h).trim().toLowerCase());
   const used = {}, at = {};
   for (const field in cols) {                 // fields in LIVE_COLUMNS order; a column is used once
     at[field] = -1;
@@ -233,11 +293,13 @@ function newestRows_(sheetId, tab, cols, tz) {
     }
   }
   if (at.facility < 0) { return found; }
-  const start = Math.max(2, last - LIVE_SCAN_ROWS + 1);
+  const start = Math.max(headRow + 2, last - LIVE_SCAN_ROWS + 1);
+  if (start > last) { return found; }
   const rows = sh.getRange(start, 1, last - start + 1, width).getValues();
   for (let r = rows.length - 1; r >= 0; r--) {   // newest (bottom) row first
     const id = String(rows[r][at.facility]).trim().toUpperCase();
     if (!id || found[id]) { continue; }
+    if (!/^[A-Z0-9]{2,8}$/.test(id)) { continue; }        // skip notes and blank-looking rows
     const o = { facility_id: id, ts: at.time >= 0 ? cellTime_(rows[r][at.time], tz) : null };
     for (const field in at) {
       if (field !== "facility" && field !== "time" && at[field] >= 0 && rows[r][at[field]] !== "") { o[field] = rows[r][at[field]]; }
@@ -252,6 +314,10 @@ function logRow_(tab, headers, row) {
   let sh = book.getSheetByName(tab);
   if (!sh) { sh = book.insertSheet(tab); sh.getRange(1, 1, 1, headers.length).setValues([headers]); sh.setFrozenRows(1); }
   sh.appendRow(row);
+}
+function normHvac_(v) {
+  const h = String(v === null || v === undefined ? "" : v).trim().toUpperCase();
+  return h === "MED" || h === "MID" ? "MEDIUM" : h;
 }
 function crowdStatus_(pct) { return pct < 35 ? "QUIET" : pct < 65 ? "MODERATE" : pct < 85 ? "BUSY" : "PACKED"; }
 function toNum_(v) {
@@ -274,7 +340,8 @@ function cellTime_(v, tz) {
 function parseTime_(s, tz) {
   s = String(s || "").trim();
   if (!s) { return null; }
-  const formats = ["dd/MM/yy HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "dd/MM/yy HH:mm", "yyyy-MM-dd HH:mm:ss"];
+  s = s.replace(",", "");                           // "11/11/2026, 13:05:22" from toLocaleString
+  const formats = ["dd/MM/yyyy HH:mm:ss", "dd/MM/yy HH:mm:ss", "dd/MM/yyyy HH:mm", "dd/MM/yy HH:mm", "yyyy-MM-dd HH:mm:ss"];
   for (let i = 0; i < formats.length; i++) {
     try { const d = Utilities.parseDate(s, tz, formats[i]); if (d && isFinite(d.getTime())) { return d.getTime(); } } catch (err) { }
   }
@@ -313,4 +380,39 @@ function clearLiveTest() {
   for (const k in all) { if (k.indexOf("crowd_") === 0 || k.indexOf("energy_") === 0) { props.deleteProperty(k); n++; } }
   CacheService.getScriptCache().remove("live_all");
   Logger.log("Removed " + n + " saved crowd/energy values");
+}
+
+// ---------- W04 check: run this from the editor, then read the log ----------
+// Shows each tab's header row and columns found, which facilities the API returns, and which of
+// LIVE_EXPECT are still missing (and why). W04 is done when it ends with "ALL FOUND".
+function checkW04() {
+  const tz = Session.getScriptTimeZone();
+  CacheService.getScriptCache().remove("live_all");
+  [[LIVE_CROWD_SHEET_ID || SHEET_ID, LIVE_TAB_CROWD, LIVE_COLUMNS.crowd],
+   [SHEET_ID, LIVE_TAB_ENV, LIVE_COLUMNS.env],
+   [LIVE_ENERGY_SHEET_ID || SHEET_ID, LIVE_TAB_ENERGY, LIVE_COLUMNS.energy]].forEach(function (t) {
+    let sh = null;
+    try { sh = SpreadsheetApp.openById(t[0]).getSheetByName(t[1]); }
+    catch (err) { Logger.log("[" + t[1] + "] can't open spreadsheet " + t[0] + ": " + err); return; }
+    if (!sh) { Logger.log("[" + t[1] + "] no tab with this exact name"); return; }
+    const rows = newestRows_(t[0], t[1], t[2], tz), ids = Object.keys(rows).sort();
+    Logger.log("[" + t[1] + "] " + sh.getLastRow() + " rows. Header row: " +
+      JSON.stringify(sh.getRange(1, 1, Math.min(2, sh.getLastRow()), sh.getLastColumn()).getValues()));
+    Logger.log("[" + t[1] + "] facilities found: " + (ids.length ? ids.join(", ") : "NONE (facility column not found?)"));
+    if (ids.length) { Logger.log("[" + t[1] + "] example: " + JSON.stringify(rows[ids[0]])); }
+  });
+  const facs = getFacilities();
+  const all = liveLatest();
+  const got = all.facilities.map(r => r.facility_id);
+  Logger.log("API returns " + all.count + ": " + got.join(", "));
+  const missing = LIVE_EXPECT.filter(id => got.indexOf(id) < 0);
+  missing.forEach(function (id) {
+    Logger.log("MISSING " + id + ": " + (id in facs ? "in the Facilities tab, but no row for it in Crowd Management / Environment yet"
+                                                    : "not in the Facilities tab and no row in the data tabs (see W21)"));
+  });
+  all.facilities.forEach(function (r) {
+    if (r.crowd_ts && !r.capacity) { Logger.log("NOTE " + r.facility_id + ": has a count but no capacity, so the map can't colour it. Fill Max Occupancy or the Facilities tab."); }
+    if (!r.ts) { Logger.log("NOTE " + r.facility_id + ": no timestamp found, so the map will show it as 'just now'."); }
+  });
+  Logger.log(missing.length ? "NOT DONE: " + missing.length + " missing" : "ALL FOUND: W04 data side is done. Now Deploy > Manage deployments > New version.");
 }
