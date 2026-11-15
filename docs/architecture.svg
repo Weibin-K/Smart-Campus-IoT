@@ -1,42 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 390" font-family="Arial, Helvetica, sans-serif" font-size="13">
-  <rect width="960" height="390" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" font-family="Arial, Helvetica, sans-serif" font-size="13">
+  <rect width="960" height="440" fill="#ffffff"/>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5f6368"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7b1fa2"/></marker>
   </defs>
   <text x="24" y="34" font-size="18" font-weight="bold" fill="#1f4e79">SIT Smart Campus: how live data reaches the map</text>
   <!-- boards -->
   <g fill="#e8f0fe" stroke="#1a73e8">
-    <rect x="24" y="70" width="190" height="52" rx="8"/><rect x="24" y="134" width="190" height="52" rx="8"/>
-    <rect x="24" y="198" width="190" height="52" rx="8"/><rect x="24" y="262" width="190" height="52" rx="8"/>
+    <rect x="24" y="70" width="210" height="56" rx="8"/>
+    <rect x="24" y="158" width="210" height="72" rx="8"/>
+    <rect x="24" y="300" width="210" height="72" rx="8"/>
   </g>
-  <g fill="#202124"><text x="38" y="92" font-weight="bold">Crowd board</text><text x="38" y="110" fill="#5f6368">radar / IR doorway count</text>
-    <text x="38" y="156" font-weight="bold">PIR lighting board</text><text x="38" y="174" fill="#5f6368">light ON / OFF</text>
-    <text x="38" y="220" font-weight="bold">Fan / HVAC board</text><text x="38" y="238" fill="#5f6368">fan %, OFF/LOW/MED/HIGH</text>
-    <text x="38" y="284" font-weight="bold">Temp / humidity board</text><text x="38" y="302" fill="#5f6368">DHT22, sound level</text></g>
+  <g fill="#202124">
+    <text x="38" y="93" font-weight="bold">Crowd board (Nasrah)</text><text x="38" y="112" fill="#5f6368">radar doorway count</text>
+    <text x="38" y="181" font-weight="bold">Board 1: sensor node (Weibin)</text><text x="38" y="200" fill="#5f6368">DHT11, sound, PIR, light sensor,</text><text x="38" y="217" fill="#5f6368">button, LCD</text>
+    <text x="38" y="323" font-weight="bold">Board 2: Energy Saving</text><text x="38" y="342" fill="#5f6368">decides HVAC level,</text><text x="38" y="359" fill="#5f6368">drives LED and fan</text>
+  </g>
   <!-- apps script -->
-  <rect x="300" y="110" width="210" height="150" rx="10" fill="#fef7e0" stroke="#c99700"/>
-  <text x="316" y="136" font-weight="bold" fill="#202124">Google Apps Script</text>
-  <text x="316" y="158" fill="#202124">doPost: checks API key and</text><text x="316" y="176" fill="#202124">facility ID, logs a row,</text>
-  <text x="316" y="194" fill="#202124">keeps the latest per facility</text>
-  <text x="316" y="222" fill="#202124">doGet ?action=latest:</text><text x="316" y="240" fill="#202124">one JSON for every facility</text>
+  <rect x="330" y="96" width="210" height="150" rx="10" fill="#fef7e0" stroke="#c99700"/>
+  <text x="346" y="122" font-weight="bold" fill="#202124">Google Apps Script</text>
+  <text x="346" y="144" fill="#202124">doPost: checks API key and</text><text x="346" y="162" fill="#202124">facility ID, logs a row,</text>
+  <text x="346" y="180" fill="#202124">keeps the latest per facility</text>
+  <text x="346" y="208" fill="#202124">doGet ?action=latest:</text><text x="346" y="226" fill="#202124">one JSON for every facility</text>
   <!-- sheet -->
-  <rect x="300" y="292" width="250" height="70" rx="10" fill="#e6f4ea" stroke="#1f9d5c"/>
-  <text x="316" y="316" font-weight="bold" fill="#202124">Google Sheet</text>
-  <text x="316" y="336" fill="#5f6368">Environment, Crowd Management,</text><text x="316" y="352" fill="#5f6368">Energy Saving, Facilities tabs</text>
+  <rect x="330" y="290" width="250" height="70" rx="10" fill="#e6f4ea" stroke="#1f9d5c"/>
+  <text x="346" y="314" font-weight="bold" fill="#202124">Google Sheet</text>
+  <text x="346" y="334" fill="#5f6368">Environment, Crowd Management,</text><text x="346" y="350" fill="#5f6368">Energy Saving, Facilities tabs</text>
   <!-- website -->
-  <rect x="610" y="110" width="320" height="150" rx="10" fill="#fce8e6" stroke="#d93025"/>
-  <text x="626" y="136" font-weight="bold" fill="#202124">Campus map website (GitHub Pages)</text>
-  <text x="626" y="158" fill="#202124">fetch every 15 s</text>
-  <text x="626" y="180" fill="#202124">rooms and markers coloured by crowd</text>
-  <text x="626" y="202" fill="#202124">panel: count, temp, humidity, comfort,</text>
-  <text x="626" y="220" fill="#202124">lights, fan %, HVAC level</text>
-  <text x="626" y="242" fill="#202124">"updated hh:mm:ss", offline after 2 min</text>
-  <!-- arrows -->
+  <rect x="640" y="96" width="296" height="150" rx="10" fill="#fce8e6" stroke="#d93025"/>
+  <text x="656" y="122" font-weight="bold" fill="#202124">Campus map website (GitHub Pages)</text>
+  <text x="656" y="144" fill="#202124">fetch every 15 s (Argon)</text>
+  <text x="656" y="166" fill="#202124">rooms coloured by crowd, panel with</text>
+  <text x="656" y="184" fill="#202124">count, temp, humidity, comfort,</text>
+  <text x="656" y="202" fill="#202124">lights, fan %, HVAC level (Fable)</text>
+  <text x="656" y="226" fill="#202124">room controls: lights, HVAC, Auto</text>
+  <!-- HTTPS arrows -->
   <g stroke="#5f6368" stroke-width="1.6" fill="none" marker-end="url(#a)">
-    <path d="M214,96 C260,96 260,150 298,160"/><path d="M214,160 L298,172"/><path d="M214,224 L298,200"/><path d="M214,288 C260,288 260,232 298,222"/>
-    <path d="M405,260 L405,290"/><path d="M512,185 L608,185"/>
+    <path d="M234,98 C285,98 285,140 328,146"/>
+    <path d="M234,186 L328,180"/>
+    <path d="M435,246 L435,288"/>
+    <path d="M540,171 L638,171"/>
   </g>
-  <text x="222" y="70" fill="#5f6368">HTTPS POST JSON, every 15-60 s</text>
-  <text x="560" y="176" fill="#5f6368" text-anchor="middle">JSON</text>
-  <text x="414" y="280" fill="#5f6368">appendRow</text>
+  <text x="244" y="76" fill="#5f6368">HTTPS POST JSON</text>
+  <text x="589" y="162" fill="#5f6368" text-anchor="middle">JSON</text>
+  <text x="444" y="272" fill="#5f6368">appendRow</text>
+  <!-- MQTT arrows -->
+  <g stroke="#7b1fa2" stroke-width="1.6" fill="none" marker-end="url(#b)">
+    <path d="M100,230 L100,298"/>
+    <path d="M160,300 L160,232"/>
+    <path d="M790,246 C790,410 420,410 236,352" stroke-dasharray="6 4"/>
+  </g>
+  <g fill="#7b1fa2">
+    <text x="92" y="256" text-anchor="end">readings</text>
+    <text x="168" y="256">decisions</text>
+    <text x="168" y="282">MQTT (HiveMQ), every 2 s</text>
+    <text x="560" y="424" text-anchor="middle">MQTT commands sitg7/&lt;ID&gt;/cmd/... (W10 + W11, not connected yet)</text>
+  </g>
 </svg>

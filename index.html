@@ -909,7 +909,7 @@ button:focus-visible,#search:focus-visible,.item:focus-visible{outline:3px solid
 .lbadge i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--c0)}
 .lbadge.off{color:var(--c3)} .lbadge.off i{background:var(--c3)}
 .ckey.tkey{padding:8px 0 0}
-/* Member 1: sensor badge (W05) and room controls (W09) */
+/* Fable: sensor badge (W05) and room controls (W09) */
 .psens{padding-top:10px;padding-bottom:10px}
 .psens span{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;line-height:1.3;padding:5px 11px;border-radius:999px;background:var(--ground);color:var(--sc,var(--muted))}
 .psens i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--sc,var(--cx))}
@@ -2503,7 +2503,7 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
   window.setFeeds = function (list) { setFeedConfig(list); return CROWD_FEEDS.length; };
   window.crowdSpots = function () { return CROWD_SPOTS.map(function (s) { return {key: s.key, facility: s.fid || null, name: s.label, type: s.type, level: s.lv}; }); };
 
-  // ---------- live data from the group's Apps Script (Member 2) ----------
+  // ---------- live data from the group's Apps Script (Argon) ----------
   // The Arduinos post to the group's Apps Script, which keeps the latest reading per facility.
   // GET LIVE_API?action=latest returns {count, facilities: [record, ...]}; one record per facility ID:
   //   facility_id, current_occupancy, capacity, occupancy_pct, crowd_status,      (Crowd Management)
@@ -2623,7 +2623,7 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
       "<div><b>" + esc(r.hvac || "–") + "</b><small>HVAC level</small>" + (lvl === undefined ? "" : '<div class="bar"><i style="width:' + (lvl * 100 / 3).toFixed(0) + '%"></i></div>') + "</div>" +
       "</div>" + liveBadge(r, "energyAt") + "</div>";
   }
-  // ---------- Member 1: sensor badge (W05) and student control panel (W09) ----------
+  // ---------- Fable: sensor badge (W05) and student control panel (W09) ----------
   // "live" = this facility's board posted in the last 2 min; "offline" = it has posted before but gone quiet
   // (or the live data can't be reached); "none" = no board for this spot, so the map shows an estimate.
   function sensorState(s) {
@@ -2641,7 +2641,7 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
     return '<div class="psec psens ' + st + '"><span><i></i>' + esc(txt) + "</span></div>";
   }
   // Commands go out as MQTT topics sitg7/<facility ID>/cmd/light | brightness | hvac | mode (agreed in W01).
-  // This file only builds the buttons. The sender is Member 2's part (W10): define
+  // This file only builds the buttons. The sender is Argon's part (W10): define
   //   window.sendCommand = function (facilityId, name, value, topic) { ...publish...; return true; }
   // and every button press reaches it. Until then the panel says the command wasn't sent.
   var CMD_ROOT = "sitg7";

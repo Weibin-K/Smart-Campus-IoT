@@ -10,7 +10,7 @@
 //  Files > + > Script > name it LiveApi. It uses those helpers, so don't paste it
 //  into a different project.
 //
-//  Then make 2 small edits in Code.gs (exact lines in README_MEMBER2.md):
+//  Then make 2 small edits in Code.gs (exact lines in docs/README_WEIBIN.md):
 //    doGet:  if (action === "latest") { return json(liveLatest(e.parameter.facility)); }
 //    doPost: if (p.type === "crowd" || p.type === "energy") { return json(livePost(p)); }
 //
@@ -68,7 +68,8 @@ const LIVE_COLUMNS = {
     sound:      ["sound level", "sound", "noise"],
     comfort:    ["comfort status", "comfort"],
     hvac:       ["hvac setting", "hvac level", "hvac"],
-    fan:        ["fan speed (%)", "fan_pct", "fan speed", "fan"]
+    fan:        ["fan speed (%)", "fan_pct", "fan speed", "fan"],
+    light:      ["light status", "lighting", "light"]
   }
 };
 
@@ -113,6 +114,8 @@ function buildLive_() {
     ["temperature", "humidity", "sound_level", "comfort", "temp_status", "humidity_status", "noise_status"]
       .forEach(f => { if (v[f] !== undefined && v[f] !== "") { r[f] = v[f]; } });
     if (v.hvac) { r.hvac = v.hvac; }
+    if (v.lighting === "ON" || v.lighting === "OFF") { r.light_on = (v.lighting === "ON"); }   // Board 2's LED, sent by Board 1
+    if (v.fan_speed !== undefined && v.fan_speed !== "" && toNum_(v.fan_speed) !== null) { r.fan_pct = Math.round(toNum_(v.fan_speed)); }
     r.env_ts = v.ts || parseTime_(v.time, tz);
   }
   // 1b. environment from the Environment tab, for any facility without a newer latest_<ID>
@@ -126,6 +129,7 @@ function buildLive_() {
     if (g.comfort) { r.comfort = String(g.comfort).trim().toUpperCase(); }
     if (g.hvac) { r.hvac = normHvac_(g.hvac); }
     if (toNum_(g.fan) !== null) { r.fan_pct = Math.max(0, Math.min(100, Math.round(toNum_(g.fan)))); }
+    if (g.light !== undefined && g.light !== null && g.light !== "" && onOff_(g.light) !== null) { r.light_on = onOff_(g.light); }
     r.env_ts = g.ts || r.env_ts || null;
   }
 
