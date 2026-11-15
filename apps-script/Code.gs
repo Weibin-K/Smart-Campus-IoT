@@ -157,6 +157,8 @@ function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents);
 
+    if (p.type === "crowd" || p.type === "energy") { return json(livePost(p)); }
+
     const secret = PropertiesService.getScriptProperties().getProperty("ENV_API_KEY");
     if (!secret || p.api_key !== secret) throw new Error("Invalid API key");
 

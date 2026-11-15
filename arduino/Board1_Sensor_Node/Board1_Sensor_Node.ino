@@ -384,6 +384,15 @@ void selectLocation() {
 }
 
 // ================= SENSORS =================
+int soundLevel(int raw) {
+  if (raw < 10)  return 1;  // Silence
+  if (raw < 20)  return 2;  // Quiet
+  if (raw < 30)  return 3;  // Moderate
+  if (raw < 40)  return 4;  // Noisy
+  if (raw < 50)  return 5;  // Loud
+  return 6;                 // Very Loud
+}
+
 int readSoundRaw() {
   unsigned long start = millis();
   int hi = 0, lo = 1023;
@@ -409,7 +418,7 @@ void readSensors() {
     Serial.println(chk);
   }
 
-  soundAvg = soundAvg * 0.7 + readSoundRaw() * 0.3;   // smoothing
+  soundAvg = soundAvg * 0.5 + readSoundRaw() * 0.5;   // faster response
   sound = (int)(soundAvg + 0.5);
 }
 
@@ -606,7 +615,7 @@ void loop() {
 
       dtostrf(temp, 1, 1, buf); publish("temp", buf);
       dtostrf(hum, 1, 1, buf);  publish("hum", buf);
-      itoa(sound, buf, 10);     publish("sound", buf);
+      itoa(soundLevel(sound), buf, 10); publish("sound", buf);  // 1-6 levels
       itoa(crowd, buf, 10);     publish("crowd", buf);
       publish("location", LOC_IDS[locIdx]);
       // (sitg7/room1/hvac is now published by Board 2, the board that decides it)
