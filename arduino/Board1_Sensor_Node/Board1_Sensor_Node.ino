@@ -342,7 +342,8 @@ void selectLocation() {
   Serial.println(F("Select location: press to change, wait 5 s to confirm"));
 
   while (millis() - lastPress < SELECT_TIMEOUT) {
-    if (buttonPressed()) {
+    if (btnFlag) {                                       // use interrupt directly (faster)
+      btnFlag = false;
       locIdx = (locIdx + 1) % NUM_LOC;
       lastPress = millis();
       lastShown = -1;
@@ -357,12 +358,12 @@ void selectLocation() {
       lastShown = secondsLeft;
     }
 
-    setScaled(150, 0, 255, 0.25 + 0.4 * (sin(breath) + 1) / 2);   // purple = menu
+    setScaled(150, 0, 255, 0.25 + 0.4 * (sin(breath) + 1) / 2);
     breath = breath + 0.06;
     if (mqttClient.connected()) { mqttClient.poll(); }
-    readRoom();                                                    // NEW: PIR is still reported in the menu
+    readRoom();
     reportOccupancy();
-    delay(20);
+    delay(10);                                           // faster loop (was 20)
   }
 
   EEPROM.update(0, locIdx);
@@ -470,6 +471,7 @@ void publish(const char* sub, const char* value) {
 // sends one JSON body to the Apps Script and prints the first line of the reply
 void postToSheet(const char* json) {
   if (sheetClient.connectSSL(GAS_HOST, 443)) {
+    sheetClient.setConnectionTimeout(3000);             // timeout after 3s
     sheetClient.print(F("POST /macros/s/"));
     sheetClient.print(DEPLOY_ID);
     sheetClient.println(F("/exec HTTP/1.1"));
@@ -500,7 +502,7 @@ void sendToSheet() {
   dtostrf(temp, 1, 1, tBuf);
   dtostrf(hum, 1, 1, hBuf);
 
-  char json[380];
+  char json[300];                                        // reduced from 380
   int n = snprintf(json, sizeof(json),
     "{\"api_key\":\"%s\",\"facility_id\":\"%s\",\"facility_name\":\"%s\","
     "\"temperature\":%s,\"humidity\":%s,\"sound_level\":%d,"
@@ -548,8 +550,10 @@ void setup() {
   pinMode(button_pin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(button_pin), onButton, FALLING);
 
-  pinMode(pir_pin, INPUT);                             // NEW
-  mqttClient.onMessage(onMqttMessage);                 // NEW: listen to Board 2
+  pinMode(pir_pin, INPUT);
+  mqttClient.onMessage(onMqttMessage);
+  WiFi.setTimeout(5000);                               // reduce WiFi timeout from 50s to 5s
+  mqttClient.setConnectionTimeout(5000);               // faster MQTT timeout
 
   lcd.init();
 
@@ -561,7 +565,7 @@ void setup() {
   connectMQTT();
 
   lastSend = millis() - SEND_INTERVAL;
-  lastSheet = millis() - SHEET_INTERVAL + 10000;   // first sheet post after ~10 s
+  lastSheet = millis() - SHEET_INTERVAL + 10000;
 }
 
 void loop() {
