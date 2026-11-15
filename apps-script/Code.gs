@@ -143,6 +143,16 @@ function tempStatus(t, c)  { return t > c.TEMP_HIGH ? "HIGH" : (t < c.TEMP_LOW ?
 function humStatus(h, c)   { return h > c.HUM_HIGH ? "HIGH" : "NORMAL"; }
 function noiseStatus(s, c) { return s >= c.SOUND_HIGH ? "LOUD" : (s >= c.SOUND_MED ? "MODERATE" : "QUIET"); }
 
+// Map raw sound level to category (Board 1 now sends raw, Apps Script maps it)
+function soundLevel(raw) {
+  if (raw < 10)  return "SILENCE";
+  if (raw < 20)  return "QUIET";
+  if (raw < 30)  return "MODERATE";
+  if (raw < 40)  return "NOISY";
+  if (raw < 50)  return "LOUD";
+  return "VERY LOUD";
+}
+
 function comfortStatus(t, h, c) {
   if (t > c.TEMP_HIGH) return "HOT";
   if (t > c.COMFY_HIGH) return "WARM";
@@ -158,6 +168,7 @@ function doPost(e) {
     const p = JSON.parse(e.postData.contents);
 
     if (p.type === "crowd" || p.type === "energy") { return json(livePost(p)); }
+    if (p.type === "batch") { return json(livePostBatch(p)); }  // batch of 4 readings
 
     const secret = PropertiesService.getScriptProperties().getProperty("ENV_API_KEY");
     if (!secret || p.api_key !== secret) throw new Error("Invalid API key");
@@ -186,7 +197,7 @@ function doPost(e) {
     const status = {
       temp: tempStatus(t, c),
       hum: humStatus(h, c),
-      noise: noiseStatus(snd, c),
+      noise: soundLevel(snd),  // use mapped level instead of threshold
       comfort: comfortStatus(t, h, c)
     };
 
@@ -282,6 +293,46 @@ function doGet(e) {
 
   return json({ ok: true, service: "Environment Logger",
                 time: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd/MM/yy HH:mm:ss") });
+}
+
+// ================== BATCH POSTING ==================
+// Process batch of 4 readings from Board 1
+function livePostBatch(batch) {
+  const id = String(batch.facility_id || "").trim().toUpperCase();
+  const facilities = getFacilities();
+  if (!(id in facilities)) throw new Error("Invalid facility ID: " + id);
+
+  const sh = ensureTab(TAB_DATA, HEADERS, null, true);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+
+  try {
+    const readings = batch.readings || [];
+    for (let i = 0; i < readings.length; i++) {
+      const r = readings[i];
+      const t = Number(r.temperature), h = Number(r.humidity), snd = Number(r.sound_level);
+      const ldr = Number(r.light_level);
+
+      if (!isFinite(t) || !isFinite(h) || !isFinite(snd)) throw new Error("Invalid sensor data");
+
+      const c = getSettings();
+      const fac = facilities[id];
+      const status = {
+        temp: tempStatus(t, c),
+        hum: humStatus(h, c),
+        noise: soundLevel(snd),
+        comfort: comfortStatus(t, h, c)
+      };
+
+      const row = [new Date(), id, fac.name, fac.category,
+                   Math.round(t * 10) / 10, Math.round(h * 10) / 10, snd,
+                   status.temp, status.hum, status.noise, status.comfort,
+                   "", "BATCH", "", ""];
+
+      sh.appendRow(row);
+    }
+    return { success: true, facility: id, count: readings.length };
+  } finally { lock.releaseLock(); }
 }
 
 // ================== DAILY SUMMARY ==================

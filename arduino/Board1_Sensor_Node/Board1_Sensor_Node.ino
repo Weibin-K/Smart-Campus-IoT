@@ -14,9 +14,10 @@
 
 #define dht_apin A0
 #define sound_pin A1
-#define ldr_pin A2            // NEW: light sensor (LDR divider)
-#define pir_pin 2             // NEW: PIR output
+#define ldr_pin A2            // light sensor (LDR divider)
+#define pir_pin 2             // PIR output
 #define button_pin 4
+#define DEGREE_CHAR 223       // ° symbol for LCD
 
 // ================= SETTINGS =================
 const char ssid[] = "weibin";
@@ -115,6 +116,16 @@ unsigned long lastEnergyMsg = 0;
 // NEW: what was last sent to the Sheet as the "energy" record
 int sentLed = -2, sentFan = -2, sentHvac = -2;
 unsigned long lastEnergySheet = 0;
+
+// Batch buffer: store 4 readings before POSTing to Sheet
+struct Reading {
+  float temp, hum;
+  int sound, ldr;
+  char occupancy[9];  // "OCCUPIED" or "VACANT"
+};
+Reading buffer[4];
+int bufferIdx = 0;
+unsigned long lastBatchPost = 0;
 
 float breath = 0, hueWave = 0;
 unsigned long lastSend = 0, lastSheet = 0, lastLight = 0;
@@ -385,15 +396,6 @@ void selectLocation() {
 }
 
 // ================= SENSORS =================
-int soundLevel(int raw) {
-  if (raw < 10)  return 1;  // Silence
-  if (raw < 20)  return 2;  // Quiet
-  if (raw < 30)  return 3;  // Moderate
-  if (raw < 40)  return 4;  // Noisy
-  if (raw < 50)  return 5;  // Loud
-  return 6;                 // Very Loud
-}
-
 int readSoundRaw() {
   unsigned long start = millis();
   int hi = 0, lo = 1023;
@@ -494,6 +496,24 @@ void postToSheet(const char* json) {
   } else {
     Serial.println(F("Sheet connection failed"));
   }
+}
+
+// Send batch of 4 readings to Sheet
+void sendBatchToSheet() {
+  char json[900];  // larger buffer for 4 records
+  int n = snprintf(json, sizeof(json), "{\"api_key\":\"%s\",\"type\":\"batch\",\"facility_id\":\"%s\",\"readings\":[",
+    API_KEY, LOC_IDS[locIdx]);
+
+  for (int i = 0; i < 4; i++) {
+    if (i > 0) n += snprintf(json + n, sizeof(json) - n, ",");
+    n += snprintf(json + n, sizeof(json) - n,
+      "{\"temperature\":%d,\"humidity\":%d,\"sound_level\":%d,\"light_level\":%d,\"occupancy\":\"%s\"}",
+      (int)buffer[i].temp, (int)buffer[i].hum, buffer[i].sound, buffer[i].ldr, buffer[i].occupancy);
+  }
+  snprintf(json + n, sizeof(json) - n, "]}");
+
+  Serial.println(F("Sending batch of 4 readings to Sheet..."));
+  postToSheet(json);
 }
 
 // Sensor row: same fields as before. The HVAC value is Board 2's decision (blank while Board 2 is not reporting).
@@ -604,8 +624,8 @@ void loop() {
 
     if (haveData) {
       char line0[17], line1[17];
-      if (lcdTick < PAGE_TICKS) {                          // page 1: readings (as before)
-        snprintf(line0, sizeof(line0), "%dC %d%% S:%d", (int)(temp + 0.5), (int)(hum + 0.5), sound);
+      if (lcdTick < PAGE_TICKS) {                          // page 1: readings
+        snprintf(line0, sizeof(line0), "%d%cC %d%% S:%d", (int)(temp + 0.5), DEGREE_CHAR, (int)(hum + 0.5), sound);
         snprintf(line1, sizeof(line1), "%s %s C:%d", LOC_IDS[locIdx], hvacText("--"), crowd);
       } else {                                             // page 2 (NEW): room here, LED + fan from Board 2
         snprintf(line0, sizeof(line0), "%s %s",
@@ -622,19 +642,26 @@ void loop() {
 
       dtostrf(temp, 1, 1, buf); publish("temp", buf);
       dtostrf(hum, 1, 1, buf);  publish("hum", buf);
-      itoa(soundLevel(sound), buf, 10); publish("sound", buf);  // 1-6 levels
+      itoa(sound, buf, 10);     publish("sound", buf);  // raw value
       itoa(crowd, buf, 10);     publish("crowd", buf);
       publish("location", LOC_IDS[locIdx]);
       // (sitg7/room1/hvac is now published by Board 2, the board that decides it)
 
+      // For Serial Plotter (Tools > Serial Plotter):
+      Serial.print(temp); Serial.print(",");
+      Serial.print(hum); Serial.print(",");
+      Serial.print(sound); Serial.print(",");
+      Serial.println(ldr);
+
+      // Status message:
       Serial.print(LOC_IDS[locIdx]);
       Serial.print(F("  T=")); Serial.print(temp, 1);
       Serial.print(F(" H="));  Serial.print(hum, 1);
       Serial.print(F(" S="));  Serial.print(sound);
       Serial.print(F(" C="));  Serial.print(crowd);
-      Serial.print(F(" | "));    Serial.print(pirReady ? (occupied ? F("OCCUPIED") : F("VACANT")) : F("PIR-WARMUP"));   // NEW
+      Serial.print(F(" | "));    Serial.print(pirReady ? (occupied ? F("OCCUPIED") : F("VACANT")) : F("PIR-WARMUP"));
       Serial.print(F(" LDR="));  Serial.print(ldr);
-      if (energyOnline()) {                                // NEW: what Board 2 decided
+      if (energyOnline()) {
         Serial.print(F(" | Board2: HVAC=")); Serial.print(hvacText("--"));
         Serial.print(F(" "));     Serial.print(ambientText("--"));
         Serial.print(F(" LED=")); Serial.print(ledText("--"));
@@ -647,14 +674,27 @@ void loop() {
     }
   }
 
-  // every 60 s: Google Sheet (only with real data)
+  // every 15 s: Store reading in buffer (instead of POSTing immediately)
   if (haveData && now - lastSheet >= SHEET_INTERVAL) {
     lastSheet = now;
-    sendToSheet();
+    buffer[bufferIdx].temp = temp;
+    buffer[bufferIdx].hum = hum;
+    buffer[bufferIdx].sound = sound;
+    buffer[bufferIdx].ldr = ldr;
+    strcpy(buffer[bufferIdx].occupancy, occupied ? "OCCUPIED" : "VACANT");
+    bufferIdx++;
+    Serial.print(F("Buffered reading ")); Serial.print(bufferIdx); Serial.println(F("/4"));
   }
-  // NEW: lights / fan / HVAC to the Sheet: when they change (at most every 20 s), and every 60 s anyway.
-  // Waits 5 s after a sensor upload, so two uploads never run back to back.
-  else if (energyOnline() && energyLed >= 0 && energyFan >= 0 && now - lastSheet >= 5000) {
+
+  // every 60 s: Send batch of 4 readings to Sheet
+  if (bufferIdx >= 4 && now - lastBatchPost >= 60000) {
+    lastBatchPost = now;
+    sendBatchToSheet();
+    bufferIdx = 0;  // reset buffer
+  }
+
+  // lights / fan / HVAC to the Sheet: when they change (at most every 20 s), and every 60 s anyway.
+  if (energyOnline() && energyLed >= 0 && energyFan >= 0 && now - lastSheet >= 5000) {
     bool changed = (energyLed != sentLed || energyFan != sentFan || hvacLevel != sentHvac);
     unsigned long since = now - lastEnergySheet;
     if ((changed && since >= ENERGY_MIN_GAP) || since >= ENERGY_INTERVAL) {
