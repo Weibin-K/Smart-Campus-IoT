@@ -17,11 +17,11 @@ Picture for the report: `docs/architecture.svg`.
 ## Who does what
 | Person | Role | Tracker tasks | Guide |
 |---|---|---|---|
-| **Fable** | Website front end: room panel, crowd colours, control panel, legend, report | W05, W07, W08, W09, W13, W18 | `docs/README_FABLE.md` |
-| **Argon** | Website integration: live data loading, freshness badge, MQTT commands | W06, W10, W12, W22 | `docs/README_ARGON.md` |
-| **Weibin** | Boards 1 and 2, Apps Script API, GitHub Pages hosting | W02, W03, W04, W11, W15, W21, W24, W25, W26 | `docs/README_WEIBIN.md` |
-| **Nasrah** | Crowd board and Crowd Management script | W20, W23 | `docs/README_NASRAH.md` |
-| **All** | Data contract, testing, bug fixing, demo | W01, W14, W16, W17, W19, W27 | `docs/TESTING.md` |
+| **Member 1** | Website front end: hosting, map, panels, legend, report | W03, W04, W07, W08, W10, W15 | `README_MEMBER1.md` |
+| **Member 2** | Website integration: live API, data loading, MQTT commands | W02, W05, W06, W09, W11, W12 | `README_MEMBER2.md` |
+| **Weibin** | Boards 1 and 2, Apps Script API, GitHub Pages hosting | W02, W03, W04, W11, W15, W21 | - |
+| **Nasrah** | Crowd board and Crowd Management script | W20, W23 | - |
+| **All** | Data contract, testing, bug fixing, demo | W01, W14, W16, W17, W19 | `TESTING.md` |
 
 The task list with dates and status is `docs/Website_Integration_Tracker.xlsx`.
 
