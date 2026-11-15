@@ -34,7 +34,7 @@
 char ssid[] = "weibin";                           // must be the same network as Board 1's broker access
 char pass[] = "YOUR_HOTSPOT_PASSWORD";              // fill in before uploading (not kept in the public repo)
 
-const char BROKER[] = "broker.hivemq.com";
+const char broker[] = "broker.emqx.io"; 
 const int MQTT_PORT = 1883;
 const char CLIENT_ID[] = "sitg7-energy-uno02";    // must be different from Board 1's ID
 

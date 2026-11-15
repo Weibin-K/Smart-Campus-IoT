@@ -22,7 +22,7 @@
 const char ssid[] = "weibin";
 const char pass[] = "31415926";   // fill in before uploading (not kept in the public repo)
 
-const char broker[] = "broker.hivemq.com";
+const char broker[] = "broker.emqx.io";
 const int  port = 1883;
 const char MQTT_ID[] = "sitg7-weibin";
 const char TOPIC_BASE[] = "sitg7/room1/";
