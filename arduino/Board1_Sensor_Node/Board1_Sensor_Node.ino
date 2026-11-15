@@ -47,8 +47,6 @@ const unsigned long PIR_WARMUP = 60000;      // PIR is ignored for the first 60 
 const unsigned long LINK_TIMEOUT = 10000;    // NEW: nothing from Board 2 for this long = no link
 const int PAGE_TICKS = 2;                    // NEW: LCD swaps page every 2 readings (4 s)
 
-// 0 = follows real temperature, 1 = HVAC colours, 2 = always green
-const int BACKLIGHT_MODE = 0;
 
 // ================= LOCATIONS =================
 const int NUM_LOC = 25;
@@ -73,13 +71,10 @@ const char* const LOC_NAMES[NUM_LOC] = {     // max 16 characters
   "Classroom", "Outdoor Area"
 };
 
-// ================= TEMPERATURE COLOURS =================
-const int NUM_STOPS = 10;
-const float stopsT[NUM_STOPS] = {18, 20, 22, 23.5, 26.5, 27.5, 28.5, 30, 32, 34};
-const uint8_t stopsC[NUM_STOPS][3] = {
-  {0, 30, 200}, {80, 170, 255}, {0, 210, 220}, {0, 255, 30}, {60, 255, 0},
-  {170, 255, 0}, {255, 220, 0}, {255, 120, 0}, {255, 10, 0}, {230, 0, 90}
-};
+// ================= LCD COLORS =================
+const byte RGB_GREEN[3] = {0, 255, 60};    // Connected + OK
+const byte RGB_BLUE[3] = {0, 150, 255};   // Connecting
+const byte RGB_RED[3] = {255, 0, 60};     // Error/offline
 
 const char* const HVAC_NAMES[4] = {"OFF", "LOW", "MEDIUM", "HIGH"};
 
@@ -92,19 +87,25 @@ MqttClient mqttClient(wifiClient);
 
 int locIdx = 0;
 int crowd = 0;
-int hvacLevel = -1;           // index into HVAC_NAMES, reported by Board 2 (-1 = not known)
+int hvacLevel = -1;
 float temp = 0, hum = 0;
 float soundAvg = 0;
 int sound = 0;
-bool haveData = false;        // true after the first valid DHT reading
+int soundRaw = 0;             // raw sound peak-to-peak
+bool haveData = false;
 
-// NEW: PIR + light sensor (sensed on this board)
-bool pirReady = false;        // true after the PIR warm-up
+// PIR + light sensor (sensed on this board)
+bool pirReady = false;
 bool occupied = false;
-bool sentOccupied = false;    // last occupancy value sent to Board 2
-int ldr = 0;                  // raw light reading
+bool sentOccupied = false;
+int ldr = 0;
 unsigned long lastMotion = 0;
 int lcdTick = 0;
+
+// Occupancy countdown timer
+bool occupancyShowing = false;  // true when showing countdown on LCD
+unsigned long occupancyStart = 0;
+const unsigned long OCCUPANCY_TIMEOUT_DISPLAY = 180000;  // 3 minutes countdown
 
 // NEW: decided by Board 2 and reported back (-1 = not known)
 int energyLed = -1;           // 1 = LED on, 0 = off
@@ -127,7 +128,6 @@ Reading buffer[4];
 int bufferIdx = 0;
 unsigned long lastBatchPost = 0;
 
-float breath = 0, hueWave = 0;
 unsigned long lastSend = 0, lastSheet = 0, lastLight = 0;
 
 char lastLine0[17] = "";
@@ -153,98 +153,18 @@ bool buttonPressed() {
   return false;
 }
 
-// ================= BACKLIGHT =================
-// only talks to the LCD when the colour actually changes
-void applyRGB(int r, int g, int b) {
-  static int lr = -1, lg = -1, lb = -1;
-  if (r != lr || g != lg || b != lb) {
-    lcd.setRGB(r, g, b);
-    lr = r; lg = g; lb = b;
-  }
-}
-
-void setScaled(float r, float g, float b, float bright) {
-  applyRGB((int)(r * bright), (int)(g * bright), (int)(b * bright));
-}
-
-void hueToRGB(float h, float &r, float &g, float &b) {
-  while (h >= 360) { h = h - 360; }
-  float x = 1 - fabs(fmod(h / 60.0, 2) - 1);
-  r = 0; g = 0; b = 0;
-  if (h < 60)       { r = 1; g = x; }
-  else if (h < 120) { r = x; g = 1; }
-  else if (h < 180) { g = 1; b = x; }
-  else if (h < 240) { g = x; b = 1; }
-  else if (h < 300) { r = x; b = 1; }
-  else              { r = 1; b = x; }
-  r = r * 255; g = g * 255; b = b * 255;
-}
-
-void tempToColour(float t, float &r, float &g, float &b) {
-  int last = NUM_STOPS - 1;
-  if (t <= stopsT[0])    { r = stopsC[0][0];    g = stopsC[0][1];    b = stopsC[0][2];    return; }
-  if (t >= stopsT[last]) { r = stopsC[last][0]; g = stopsC[last][1]; b = stopsC[last][2]; return; }
-  for (int i = 0; i < last; i++) {
-    if (t <= stopsT[i + 1]) {
-      float k = (t - stopsT[i]) / (stopsT[i + 1] - stopsT[i]);
-      r = stopsC[i][0] + (stopsC[i + 1][0] - stopsC[i][0]) * k;
-      g = stopsC[i][1] + (stopsC[i + 1][1] - stopsC[i][1]) * k;
-      b = stopsC[i][2] + (stopsC[i + 1][2] - stopsC[i][2]) * k;
-      return;
-    }
-  }
-}
-
-void connectingGlow(unsigned long ms) {
-  static float hue = 0;
-  unsigned long start = millis();
-  while (millis() - start < ms) {
-    float r, g, b;
-    hueToRGB(hue, r, g, b);
-    setScaled(r, g, b, 0.15 + 0.35 * (sin(breath) + 1) / 2);
-    hue = hue + 0.6;
-    breath = breath + 0.05;
-    delay(30);
-  }
-}
-
-void rainbowBurst(unsigned long ms) {
-  float hue = 0;
-  unsigned long start = millis();
-  while (millis() - start < ms) {
-    float r, g, b;
-    hueToRGB(hue, r, g, b);
-    setScaled(r, g, b, 0.5);
-    hue = hue + 12;
-    delay(15);
-  }
-}
-
-void greenBreathe(unsigned long ms) {
-  unsigned long start = millis();
-  while (millis() - start < ms) {
-    setScaled(0, 255, 60, 0.2 + 0.4 * (sin(breath) + 1) / 2);
-    breath = breath + 0.05;
-    delay(30);
-  }
+// ================= LCD BACKLIGHT =================
+void setColor(const byte rgb[3]) {
+  lcd.setRGB(rgb[0], rgb[1], rgb[2]);
 }
 
 void updateBacklight() {
-  if (BACKLIGHT_MODE == 0) {
-    float r, g, b;
-    tempToColour(temp + sin(hueWave) * 0.7, r, g, b);
-    float speed = 0.03 + (temp - 20) * 0.004;
-    if (speed < 0.02) { speed = 0.02; }
-    breath = breath + speed;
-    hueWave = hueWave + 0.013;
-    setScaled(r, g, b, 0.25 + 0.45 * (sin(breath) + 1) / 2);
+  if (!mqttClient.connected()) {
+    setColor(RGB_RED);    // Red = offline
+  } else if (WiFi.status() == WL_CONNECTED) {
+    setColor(RGB_GREEN);  // Green = connected
   } else {
-    float bright = 0.25 + 0.35 * (sin(breath) + 1) / 2;
-    breath = breath + 0.04;
-    if (BACKLIGHT_MODE == 2 || hvacLevel == 1) { setScaled(40, 255, 40, bright); }
-    else if (hvacLevel <= 0) { setScaled(120, 120, 120, bright * 0.6); }   // OFF or not known
-    else if (hvacLevel == 2) { setScaled(255, 120, 0, bright); }
-    else                     { setScaled(255, 0, 0, bright); }
+    setColor(RGB_BLUE);   // Blue = connecting
   }
 }
 
@@ -345,6 +265,11 @@ const char* ambientText(const char* unknown) {
   return energyDark ? "DARK" : "BRIGHT";
 }
 
+// Get seconds remaining from a timeout
+int secondsRemaining(unsigned long start, unsigned long timeout) {
+  return (timeout - (millis() - start)) / 1000;
+}
+
 // ================= LOCATION MENU =================
 void selectLocation() {
   lcdReset();
@@ -360,7 +285,7 @@ void selectLocation() {
       lastShown = -1;
     }
 
-    int secondsLeft = (SELECT_TIMEOUT - (millis() - lastPress)) / 1000 + 1;
+    int secondsLeft = secondsRemaining(lastPress, SELECT_TIMEOUT) + 1;
     if (secondsLeft != lastShown) {
       char line[17];
       snprintf(line, sizeof(line), ">%-10s %ds", LOC_IDS[locIdx], secondsLeft);
@@ -369,8 +294,7 @@ void selectLocation() {
       lastShown = secondsLeft;
     }
 
-    setScaled(150, 0, 255, 0.25 + 0.4 * (sin(breath) + 1) / 2);
-    breath = breath + 0.06;
+    lcd.setRGB(150, 0, 255);  // purple = menu
     if (mqttClient.connected()) { mqttClient.poll(); }
     readRoom();
     reportOccupancy();
@@ -378,14 +302,15 @@ void selectLocation() {
   }
 
   EEPROM.update(0, locIdx);
-  sentLed = -2;                                        // NEW: send lights / fan / HVAC again under the new location
+  sentLed = -2;
   Serial.print(F("Location confirmed: "));
   Serial.println(LOC_IDS[locIdx]);
 
   lcdReset();
   lcdLine(0, "Location set:", lastLine0);
   lcdLine(1, LOC_IDS[locIdx], lastLine1);
-  greenBreathe(1200);
+  setColor(RGB_GREEN);  // Green confirmation
+  delay(1200);
   lcdReset();
   lcdLine(0, "Loading data...", lastLine0);
   delay(600);
@@ -421,7 +346,8 @@ void readSensors() {
     Serial.println(chk);
   }
 
-  soundAvg = soundAvg * 0.5 + readSoundRaw() * 0.5;   // faster response
+  soundRaw = readSoundRaw();
+  soundAvg = soundAvg * 0.5 + soundRaw * 0.5;  // faster response
   sound = (int)(soundAvg + 0.5);
 }
 
@@ -431,33 +357,37 @@ void readSensors() {
 void connectWiFi() {
   lcdReset();
   lcdLine(0, "Connecting WiFi", lastLine0);
+  setColor(RGB_BLUE);
   while (WiFi.status() != WL_CONNECTED) {
-    connectingGlow(1500);
+    delay(1500);
     WiFi.begin(ssid, pass);
-    connectingGlow(1500);
+    delay(1500);
   }
   Serial.println(F("WiFi connected"));
   lcdLine(0, "WiFi connected!", lastLine0);
-  rainbowBurst(2000);
+  setColor(RGB_GREEN);
+  delay(2000);
 }
 
 void connectMQTT() {
   lcdReset();
   lcdLine(0, "Connecting MQTT", lastLine0);
+  setColor(RGB_BLUE);
   mqttClient.setId(MQTT_ID);
   while (!mqttClient.connect(broker, port)) {
     Serial.print(F("MQTT failed, error "));
     Serial.println(mqttClient.connectError());
-    greenBreathe(2000);
+    delay(2000);
     if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
   }
   Serial.println(F("MQTT connected"));
-  mqttClient.subscribe("sitg7/room1/energy/hvac");       // NEW: Board 2's decisions
+  mqttClient.subscribe("sitg7/room1/energy/hvac");
   mqttClient.subscribe("sitg7/room1/energy/lighting");
   mqttClient.subscribe("sitg7/room1/energy/ambient");
   mqttClient.subscribe("sitg7/room1/energy/fan");
   lcdLine(0, "All connected :)", lastLine0);
-  greenBreathe(2000);
+  setColor(RGB_GREEN);
+  delay(2000);
   lcdReset();
 }
 
@@ -624,19 +554,29 @@ void loop() {
 
     if (haveData) {
       char line0[17], line1[17];
-      if (lcdTick < PAGE_TICKS) {                          // page 1: readings
+
+      // Show countdown only when occupied
+      if (occupied && !occupancyShowing) {
+        occupancyShowing = true;
+        occupancyStart = now;
+      }
+
+      if (occupancyShowing) {
+        int secondsLeft = secondsRemaining(occupancyStart, OCCUPANCY_TIMEOUT_DISPLAY);
+        if (secondsLeft > 0) {
+          snprintf(line0, sizeof(line0), "OCCUPIED: %d s", secondsLeft);
+          snprintf(line1, sizeof(line1), "LED:%s FAN:%d%%", ledText("--"), energyFan >= 0 ? energyFan : 0);
+        } else {
+          snprintf(line0, sizeof(line0), "VACANT");
+          snprintf(line1, sizeof(line1), "No motion");
+          occupancyShowing = false;
+        }
+      } else {
+        // Normal page 1: readings
         snprintf(line0, sizeof(line0), "%d%cC %d%% S:%d", (int)(temp + 0.5), DEGREE_CHAR, (int)(hum + 0.5), sound);
         snprintf(line1, sizeof(line1), "%s %s C:%d", LOC_IDS[locIdx], hvacText("--"), crowd);
-      } else {                                             // page 2 (NEW): room here, LED + fan from Board 2
-        snprintf(line0, sizeof(line0), "%s %s",
-                 pirReady ? (occupied ? "OCCUPIED" : "VACANT") : "WARMUP", ambientText("--"));
-        if (energyOnline() && energyFan >= 0) {
-          snprintf(line1, sizeof(line1), "LED:%-3s FAN:%d%%", ledText("--"), energyFan);
-        } else {
-          snprintf(line1, sizeof(line1), "Board 2: no link");
-        }
       }
-      lcdTick = (lcdTick + 1) % (2 * PAGE_TICKS);
+
       lcdLine(0, line0, lastLine0);
       lcdLine(1, line1, lastLine1);
 
@@ -648,10 +588,11 @@ void loop() {
       // (sitg7/room1/hvac is now published by Board 2, the board that decides it)
 
       // For Serial Plotter (Tools > Serial Plotter):
-      Serial.print(temp); Serial.print(",");
-      Serial.print(hum); Serial.print(",");
-      Serial.print(sound); Serial.print(",");
-      Serial.println(ldr);
+      Serial.print("temp:"); Serial.print(temp);
+      Serial.print(" hum:"); Serial.print(hum);
+      Serial.print(" soundRaw:"); Serial.print(soundRaw);
+      Serial.print(" soundAvg:"); Serial.print(sound);
+      Serial.print(" ldr:"); Serial.println(ldr);
 
       // Status message:
       Serial.print(LOC_IDS[locIdx]);
