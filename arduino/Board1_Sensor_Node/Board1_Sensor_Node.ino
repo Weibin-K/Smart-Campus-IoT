@@ -20,7 +20,7 @@
 
 // ================= SETTINGS =================
 const char ssid[] = "weibin";
-const char pass[] = "YOUR_HOTSPOT_PASSWORD";   // fill in before uploading (not kept in the public repo)
+const char pass[] = "31415926";   // fill in before uploading (not kept in the public repo)
 
 const char broker[] = "broker.hivemq.com";
 const int  port = 1883;
