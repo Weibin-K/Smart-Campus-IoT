@@ -504,11 +504,14 @@ void sendToSheet() {
   int n = snprintf(json, sizeof(json),
     "{\"api_key\":\"%s\",\"facility_id\":\"%s\",\"facility_name\":\"%s\","
     "\"temperature\":%s,\"humidity\":%s,\"sound_level\":%d,"
+    "\"occupancy\":\"%s\",\"light_level\":%d,"
     "\"hvac\":\"%s\",\"data_source\":\"SENSOR\"",
-    API_KEY, LOC_IDS[locIdx], LOC_NAMES[locIdx], tBuf, hBuf, sound, hvacText(""));
-  // NEW: Light Status and Fan Speed (%) columns. Left out (blank cells) while Board 2 is not reporting.
+    API_KEY, LOC_IDS[locIdx], LOC_NAMES[locIdx], tBuf, hBuf, sound,
+    occupied ? "OCCUPIED" : "VACANT", ldr, hvacText(""));
+  // Light Status and Fan Speed (%) from Board 2. Left out (blank cells) while Board 2 is not reporting.
   if (energyLed >= 0) { n += snprintf(json + n, sizeof(json) - n, ",\"lighting\":\"%s\"", energyLed ? "ON" : "OFF"); }
   if (energyFan >= 0) { n += snprintf(json + n, sizeof(json) - n, ",\"fan_speed\":%d", energyFan); }
+  if (energyDark >= 0) { n += snprintf(json + n, sizeof(json) - n, ",\"ambient\":\"%s\"", energyDark ? "DARK" : "BRIGHT"); }
   snprintf(json + n, sizeof(json) - n, "}");
 
   Serial.print(F("Sending to sheet ("));

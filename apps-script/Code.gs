@@ -11,7 +11,7 @@ const HEADERS = ["Timestamp","Facility ID","Facility Name","Category",
                  "Temperature (°C)","Humidity (%)","Sound Level (raw)",
                  "Temp Status","Humidity Status","Noise Status","Comfort Status",
                  "HVAC Setting","Data Source",
-                 "Light Status","Fan Speed (%)"];      // NEW: decided by Board 2, sent by Board 1
+                 "Light Status","Fan Speed (%)","Occupancy Level","Light Level (raw)","Ambient","Lighting","Fan Speed (%)"];      // W26: Board 1 new fields
 
 const SETTINGS_HEADERS = ["Parameter","Value","Unit","Reason"];
 const DEFAULT_SETTINGS = [
