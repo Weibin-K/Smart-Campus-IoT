@@ -25,6 +25,11 @@ Picture for the report: `docs/architecture.svg`.
 
 The task list with dates and status is `docs/Website_Integration_Tracker.xlsx`.
 
+## Status
+**Board 1 (Sensor Node):** ✅ Connected to MQTT  
+**Board 2 (Energy Saving):** ✅ Connected to MQTT  
+**Website:** 🟡 In progress (W26, W27 next)
+
 ## Try it in 30 seconds
 1. Download the repo, then double-click `index.html`. The map works offline.
 2. To see live-looking data without any boards, open `index.html?mock=1`. Tap **How busy** or **Food**.

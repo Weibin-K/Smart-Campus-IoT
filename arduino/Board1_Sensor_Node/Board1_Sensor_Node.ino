@@ -392,7 +392,7 @@ int readSoundRaw() {
     if (v > hi) { hi = v; }
     if (v < lo) { lo = v; }
   }
-  return hi - lo;                                      // peak-to-peak loudness
+  return (hi - lo) * 2;                                // peak-to-peak loudness, amplified 2x
 }
 
 void readSensors() {

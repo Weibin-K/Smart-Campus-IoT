@@ -74,7 +74,7 @@ const unsigned long MQTT_RETRY_INTERVAL = 10000UL;
 // =====================================================
 // 4. OBJECTS
 // =====================================================
-
+can ex
 WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
 
@@ -202,7 +202,7 @@ void onMqttMessage(int messageSize) {
 
 bool connectMQTT() {
   Serial.println("Connecting to HiveMQ...");
-  bool ok = mqttClient.connect(BROKER, MQTT_PORT);    // can pause for several seconds if it fails
+  bool ok = mqttClient.connect(broker, MQTT_PORT);    // can pause for several seconds if it fails
   lastMQTTAttempt = millis();
   if (ok) {
     Serial.println("MQTT connected");
