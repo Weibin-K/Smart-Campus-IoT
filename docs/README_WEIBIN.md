@@ -40,7 +40,7 @@ Fill in the **Capacity** column of the Facilities tab for every place with a cou
 
 ## W21: add DR2 and DR3
 Add the rows to `DEFAULT_FACILITIES` and run `setupAll`, or type them into the Facilities tab.
-Tell Fable so the two spots are added to `CROWD_SPOTS` too.
+Tell Weibin so the two spots are added to `CROWD_SPOTS` too.
 
 ## W24 and W25: the two boards
 | Board | Sketch | Does |
@@ -64,7 +64,7 @@ Done when Board 1's LCD page 2 shows `LED:... FAN:...%` instead of `Board 2: no 
 Old rows keep working; the two cells are blank when Board 1 has no link to Board 2.
 
 ## W11: Board 2 listens for website commands
-**Not built yet.** The website will publish `sitg7/<ID>/cmd/light`, `/brightness`, `/hvac` and `/mode` (Argon, W10).
+**Not built yet.** The website will publish `sitg7/<ID>/cmd/light`, `/brightness`, `/hvac` and `/mode` (Weibin, W10).
 Board 2 has to subscribe, switch to MANUAL when a command arrives, and go back to AUTO on a `mode` command.
 
 Two things to agree with the group first:

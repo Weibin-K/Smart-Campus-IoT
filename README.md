@@ -37,8 +37,8 @@ The task list with dates and status is `docs/Website_Integration_Tracker.xlsx`.
 ## Folders
 | Path | What it is | Owner |
 |---|---|---|
-| `index.html`, `leaflet.js`, `data/` | The website. These must stay at the top level for GitHub Pages | Fable, Argon |
-| `data/mock_live.js` | Fake readings for `?mock=1` (testing and demo backup) | Argon |
+| `index.html`, `leaflet.js`, `data/` | The website. These must stay at the top level for GitHub Pages | Weibin |
+| `data/mock_live.js` | Fake readings for `?mock=1` (testing and demo backup) | Weibin |
 | `facilities.csv` | Facility IDs and which map spot each one is | All |
 | `apps-script/LiveApi.gs` | The combined live API added to the Environment Logger script | Weibin |
 | `arduino/Board1_Sensor_Node/` | Board 1: DHT11, sound, PIR, light sensor, button, LCD, Google Sheet | Weibin |

@@ -403,6 +403,45 @@ function createDailyTrigger() {
   return "Daily summary trigger set for ~00:10";
 }
 
+// ================== FAN LOGIC TAB ==================
+// Run once from the editor: creates a "Fan Logic" tab next to Settings.
+// The thresholds are read from the Settings tab. Board 2 uses the same values in its firmware (31 C, 75 %).
+const TAB_FAN = "Fan Logic";
+function addFanLogicTab() {
+  const book = ss();
+  let sh = book.getSheetByName(TAB_FAN);
+  if (!sh) { sh = book.insertSheet(TAB_FAN); }
+  sh.clear();
+  const rows = [
+    ["Fan level by occupancy, temperature and humidity (same rule as Board 2)", "", "", "", ""],
+    ["Temperature high at (°C), from Settings", "", "", "", ""],
+    ["Humidity high at (%), from Settings", "", "", "", ""],
+    ["", "", "", "", ""],
+    ["Occupancy", "Temperature", "Humidity", "Fan level", "Fan speed (%)"],
+    ["VACANT", "any", "any", "OFF", 0],
+    ["OCCUPIED", "normal (below 31 °C)", "normal (below 75 %)", "LOW", 70],
+    ["OCCUPIED", "high (31 °C or more)", "normal (below 75 %)", "MEDIUM", 85],
+    ["OCCUPIED", "normal (below 31 °C)", "high (75 % or more)", "MEDIUM", 85],
+    ["OCCUPIED", "high (31 °C or more)", "high (75 % or more)", "HIGH", 100],
+    ["", "", "", "", ""],
+    ["Manual override from the MQTT panel", "", "", "", ""],
+    ["Command topic: sitg7/room1/cmd/fan, payload LOC:VALUE (for example LIB:70)", "", "", "", ""],
+    ["VALUE = AUTO, OFF, LOW, MEDIUM, HIGH or 0 to 100", "", "", "", ""],
+    ["LOC must match the location Board 1 reports, otherwise the command is ignored", "", "", "", ""],
+    ["Vacancy hold: lights and fan stay on for 2 minutes after the room is reported vacant", "", "", "", ""]
+  ];
+  sh.getRange(1, 1, rows.length, 5).setValues(rows);
+  sh.getRange("B2").setFormula('=INDEX(Settings!$B:$B,MATCH("TEMP_HIGH",Settings!$A:$A,0))');
+  sh.getRange("B3").setFormula('=INDEX(Settings!$B:$B,MATCH("HUM_HIGH",Settings!$A:$A,0))');
+  sh.getRange(1, 1).setFontWeight("bold");
+  sh.getRange(5, 1, 1, 5).setFontWeight("bold").setBackground("#e6ecf4");
+  sh.getRange(12, 1).setFontWeight("bold");
+  sh.autoResizeColumns(1, 5);
+  const settings = book.getSheetByName(TAB_SETTINGS);
+  if (settings) { book.setActiveSheet(sh); book.moveActiveSheet(settings.getIndex() + 1); }
+  return "Fan Logic tab ready";
+}
+
 // ================== HELPERS & TESTS ==================
 function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);

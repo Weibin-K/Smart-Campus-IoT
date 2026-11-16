@@ -31,8 +31,8 @@
 // 1. SETTINGS (edit these)
 // =====================================================
 
-char ssid[] = "YOUR_WIFI_SSID";                           // must be the same network as Board 1's broker access
-char pass[] = "YOUR_WIFI_PASSWORD";              // fill in before uploading (not kept in the public repo)
+char ssid[] = "weibin";                           // must be the same network as Board 1's broker access
+char pass[] = "31415926";              // fill in before uploading (not kept in the public repo)
 
 const char broker[] = "broker.emqx.io"; 
 const int MQTT_PORT = 1883;
@@ -68,11 +68,11 @@ const float TEMP_HIGH_THRESHOLD = 31.0;
 const float HUM_HIGH_THRESHOLD = 75.0;
 
 // Fan speed in percent for each HVAC level
-const int FAN_LOW = 40;
+const int FAN_LOW = 70;         // occupied, temperature and humidity normal
 const int FAN_LOW_MEDIUM = 55;
-const int FAN_MEDIUM = 70;
+const int FAN_MEDIUM = 85;      // occupied, one of temperature or humidity high
 const int FAN_MEDIUM_HIGH = 85;
-const int FAN_HIGH = 100;
+const int FAN_HIGH = 100;       // occupied, temperature and humidity both high
 const unsigned long FAN_KICK_MS = 300UL;          // full power for a moment so a stopped fan spins up
 
 const unsigned long DATA_TIMEOUT = 20000UL;       // nothing from Board 1 for this long = data lost
@@ -437,7 +437,11 @@ void updateHVAC() {
 // Uses the handover table with crowd = 1 (one person present) for the occupied case.
 String fanLevel() {
   if (!roomValid || !occupied || !effectiveDataValid) { return "OFF"; }
-  return calculateHVAC(effectiveTemperature, effectiveHumidity, 1);
+  bool tHigh = (effectiveTemperature >= TEMP_HIGH_THRESHOLD);
+  bool hHigh = (effectiveHumidity >= HUM_HIGH_THRESHOLD);
+  if (tHigh && hHigh) { return "HIGH"; }        // temperature and humidity both high
+  if (tHigh || hHigh) { return "MEDIUM"; }      // one of them high
+  return "LOW";                                 // both normal
 }
 
 void updateFan(unsigned long now) {

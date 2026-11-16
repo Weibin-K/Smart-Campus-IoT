@@ -1,6 +1,6 @@
-# Argon: website integration (live data, freshness badge, MQTT commands)
+# Weibin: website integration (live data, freshness badge, MQTT commands)
 
-You own **W06, W22, W10 and W12**. Fable edits the panel and legend parts of `index.html`; you edit the
+You own **W06, W22, W10 and W12**. Weibin edits the panel and legend parts of `index.html`; you edit the
 data loader and the command sender. Pull before you start and push when you finish a task.
 
 ## W06: the map reads the Apps Script API
@@ -38,7 +38,7 @@ The place to change is `sensorState(s)` and the badge text just below it in `ind
 `crowd_ts`, `energy_ts` and `env_ts` in milliseconds.
 
 ## W10: send control commands over MQTT
-**Not built yet.** Fable's buttons already call `window.sendCommand(facilityId, name, value, topic)` with the
+**Not built yet.** Weibin's buttons already call `window.sendCommand(facilityId, name, value, topic)` with the
 topic `sitg7/<ID>/cmd/light | brightness | hvac | mode`. You only need to define that function.
 A starting point (add the MQTT.js library first):
 ```html

@@ -6,7 +6,7 @@
 - [ ] Capacity filled in on the Facilities tab for each place with a counter.
 - [ ] Agree what `cmd/mode` means and whether topics use `room1` or the facility ID (see W11).
 
-## W14: simulated data and commands (Fable, Argon)
+## W14: simulated data and commands (Weibin)
 | # | Do | Expect | Pass? |
 |---|---|---|---|
 | 1 | Open `index.html?mock=1` | How busy list says "Simulated live data"; spots show live counts | |

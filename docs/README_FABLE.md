@@ -1,7 +1,7 @@
-# Fable: website front end (room panel, colours, controls, legend, report)
+# Weibin: website front end (room panel, colours, controls, legend, report)
 
 You own **W05, W07, W08, W09, W13 and W18**. Most of this is already built in `index.html`; your job is to
-check every facility, tune the look, and write it up. Argon edits the data loader in the same file, so
+check every facility, tune the look, and write it up. Weibin edits the data loader in the same file, so
 pull before you start and push when you finish a task.
 
 ## W05: room click, zoom and sensor badge
@@ -45,7 +45,7 @@ Lights, fan and HVAC are decided by Board 2 (Energy Saving) and reach the sheet 
 The **Room controls** section is built: Lights On/Off, Brightness 25/50/75/100%, HVAC Off/Low/Med/High and Auto,
 with a **Manual mode / Auto mode** badge. Controls are only active when the room's sensor is live.
 
-The buttons call `sendControl(...)`, which hands the command to `window.sendCommand`. Until Argon finishes
+The buttons call `sendControl(...)`, which hands the command to `window.sendCommand`. Until Weibin finishes
 **W10**, the panel says "Not sent: the command link (MQTT) isn't connected on this page yet". That is expected.
 
 ## W13: legend, colours and phone layout
