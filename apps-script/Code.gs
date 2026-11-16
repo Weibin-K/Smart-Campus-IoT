@@ -164,6 +164,22 @@ function comfortStatus(t, h, c) {
   return "COMFY";
 }
 
+// Raw LDR value from Board 1 (0-1023), or blank when not sent
+function lightLevelCell_(v) {
+  const n = Number(v);
+  return (v !== undefined && v !== null && v !== "" && isFinite(n) && n >= 0 && n <= 1023) ? Math.round(n) : "";
+}
+// Occupancy from Board 1: OCCUPIED or VACANT, or blank when not sent
+function occupancyCell_(v) {
+  const s = String(v == null ? "" : v).trim().toUpperCase();
+  return (s === "OCCUPIED" || s === "VACANT") ? s : "";
+}
+// Ambient from Board 2: DARK or BRIGHT, or blank when not sent
+function ambientCell_(v) {
+  const s = String(v == null ? "" : v).trim().toUpperCase();
+  return (s === "DARK" || s === "BRIGHT") ? s : "";
+}
+
 // ================== RECEIVE DATA (Arduino) ==================
 function doPost(e) {
   try {
@@ -207,7 +223,11 @@ function doPost(e) {
                  Math.round(t * 10) / 10, Math.round(h * 10) / 10, snd,
                  status.temp, status.hum, status.noise, status.comfort,
                  hvac, String(p.data_source || "SENSOR"),
-                 light, fan];
+                 light, fan,
+                 occupancyCell_(p.occupancy),              // Occupancy Level from Board 1
+                 lightLevelCell_(p.light_level),           // Light Level (raw) from Board 1
+                 ambientCell_(p.ambient),                  // Ambient DARK / BRIGHT from Board 2
+                 light, fan];                              // Lighting and Fan Speed (%) columns (same values)
 
     const lock = LockService.getScriptLock();
     lock.waitLock(10000);
@@ -319,7 +339,10 @@ function livePostBatch(batch) {
       const row = [new Date(), id, fac.name, fac.category,
                    Math.round(t * 10) / 10, Math.round(h * 10) / 10, snd,
                    status.temp, status.hum, status.noise, status.comfort,
-                   "", "BATCH", "", ""];
+                   "", "BATCH", "", "",
+                   occupancyCell_(r.occupancy),               // Occupancy Level from Board 1
+                   lightLevelCell_(r.light_level),            // Light Level (raw) from Board 1
+                   "", "", ""];                               // Ambient, Lighting, Fan: not sent in batches
 
       sh.appendRow(row);
     }

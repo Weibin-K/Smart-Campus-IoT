@@ -45,6 +45,11 @@ const char CLIENT_ID[] = "sitg7-energy-uno02";    // must be different from Boar
 const int LED_PIN = 5;
 const int FAN_PIN = 9;
 
+// Lights and fan stay on this long after the room is reported vacant
+const unsigned long OFF_DELAY_MS = 120000UL;     // 2 minutes
+unsigned long lastOccupiedMs = 0;                // last time the room was reported occupied
+bool haveOccupied = false;                       // true once an occupied report has been seen
+
 // =====================================================
 // 3. THRESHOLDS AND TIMING
 // =====================================================
@@ -277,7 +282,16 @@ void checkSensorData() {
 
 void updateLighting() {
   if (roomValid) {
-    occupied = reportedOccupied;
+    // occupied stays ON for OFF_DELAY_MS after the room is reported vacant (LED and fan)
+    if (reportedOccupied) {
+      occupied = true;
+      lastOccupiedMs = millis();
+      haveOccupied = true;
+    } else if (haveOccupied && millis() - lastOccupiedMs < OFF_DELAY_MS) {
+      occupied = true;
+    } else {
+      occupied = false;
+    }
 
     // brightness with hysteresis
     if (isDark && ldrValue >= BRIGHT_THRESHOLD) {
@@ -366,13 +380,22 @@ void updateHVAC() {
 // 11. FAN (shows the HVAC level physically)
 // =====================================================
 
+// Fan rule: follows occupancy (PIR), temperature and humidity. Crowd level is not used.
+//   vacant                 -> OFF
+//   occupied, NORMAL air   -> LOW
+//   occupied, HIGH air     -> MEDIUM   (temperature or humidity high)
+// Uses the handover table with crowd = 1 (one person present) for the occupied case.
+String fanLevel() {
+  if (!roomValid || !occupied || !effectiveDataValid) { return "OFF"; }
+  return calculateHVAC(effectiveTemperature, effectiveHumidity, 1);
+}
+
 void updateFan(unsigned long now) {
-  int target = 0;                                   // OFF or SENSOR_FAULT -> stopped
-  if (hvacDetailed == "LOW")              { target = FAN_LOW; }
-  else if (hvacDetailed == "LOW-MEDIUM")  { target = FAN_LOW_MEDIUM; }
-  else if (hvacDetailed == "MEDIUM")      { target = FAN_MEDIUM; }
-  else if (hvacDetailed == "MEDIUM-HIGH") { target = FAN_MEDIUM_HIGH; }
-  else if (hvacDetailed == "HIGH")        { target = FAN_HIGH; }
+  String level = fanLevel();
+  int target = 0;                                   // OFF or no data -> stopped
+  if (level == "LOW")              { target = FAN_LOW; }
+  else if (level == "MEDIUM")      { target = FAN_MEDIUM; }
+  else if (level == "HIGH")        { target = FAN_HIGH; }
 
   // starting from a stop: short full-power kick
   if (fanPercent == 0 && target > 0) {
