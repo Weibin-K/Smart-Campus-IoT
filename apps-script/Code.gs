@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS = [
 
 const FACILITY_HEADERS = ["Facility ID","Facility Name","Category","Building","Level","Capacity","Notes"];
 const DEFAULT_FACILITIES = [
-  ["GYM",  "Gym 1",                 "Gym",         "E5", "5",   "", ""],
+  ["GYM",  "Gym 1",                 "Gym",         "E5", "5",   20, ""],
   ["GYM2", "Gym 2",                 "Gym",         "E5", "6",   "", ""],
   ["GYM3", "Outdoor Gym",           "Gym",         "E5", "7",   "", "Outdoor"],
   ["LIB",  "Learning Commons",      "Library",     "W1", "5",   40, ""],
@@ -37,6 +37,8 @@ const DEFAULT_FACILITIES = [
   ["FCB",  "W3 Food Court",         "Food court",  "W3", "2",   60, ""],
   ["FCC",  "Takeaway Kiosk",        "Food court",  "E1", "1",   "", ""],
   ["DR1",  "Discussion Room",       "Study space", "",   "",    8,  "Already used in crowd sheet"],
+  ["DR2",  "Discussion Room 2",     "Study space", "",   "",    8,  "Crowd sheet"],
+  ["DR3",  "Discussion Room 3",     "Study space", "",   "",    8,  "Crowd sheet"],
   ["STB",  "Common Study Space B",  "Study space", "",   "",    30, "Already used in crowd sheet"],
   ["E2L2M","E2 L2M Study Space",    "Study space", "E2", "2M",  "", "Project Hub"],
   ["E2L5A","E2 L5 Study Space 1",   "Study space", "E2", "5",   "", "Discovery Hub 2"],

@@ -49,7 +49,7 @@ const int PAGE_TICKS = 2;                    // NEW: LCD swaps page every 2 read
 
 
 // ================= LOCATIONS =================
-const int NUM_LOC = 25;
+const int NUM_LOC = 27;
 const char* const LOC_IDS[NUM_LOC] = {
   "GYM", "GYM2", "GYM3",
   "LIB", "LIB2", "LIB3", "LIB4",
@@ -58,17 +58,17 @@ const char* const LOC_IDS[NUM_LOC] = {
   "E2L2M", "E2L5A", "E2L5B", "E2L7", "E2L9",
   "E6L6", "E6L7", "E6L8", "E6L9",
   "W1L5", "W1L6",
-  "CLS", "OUT"
+  "CLS", "OUT", "DR2", "DR3"
 };
 const char* const LOC_NAMES[NUM_LOC] = {     // max 16 characters
   "Gym 1", "Gym 2", "Outdoor Gym",
   "Learning Commons", "Book Collection", "Lib Amphitheatre", "Lounge Library",
   "E4 Food Court", "W3 Food Court", "Takeaway Kiosk",
-  "Discussion Room", "Study Space B",
+  "Discussion Room", "Common Study B",
   "E2 L2M Study", "E2 L5 Study 1", "E2 L5 Study 2", "E2 L7 Study", "E2 L9 Study",
   "E6 L6 Study", "E6 L7 Study", "E6 L8 Study", "E6 L9 Study",
   "W1 L5 Proj Hub", "W1 L6 Proj Hub",
-  "Classroom", "Outdoor Area"
+  "Classroom", "Outdoor Area", "Discussion Rm 2", "Discussion Rm 3"
 };
 
 // ================= LCD COLORS =================
