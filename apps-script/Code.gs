@@ -280,17 +280,7 @@ function doGet(e) {
   const props = PropertiesService.getScriptProperties();
 
   if (action === "latest") {
-    const one = e.parameter.facility ? String(e.parameter.facility).toUpperCase() : "";
-    if (one) {
-      const v = props.getProperty("latest_" + one);
-      return json(v ? JSON.parse(v) : { error: "No data yet for " + one });
-    }
-    const all = props.getProperties();
-    const list = [];
-    for (const k in all) {
-      if (k.indexOf("latest_") === 0) { list.push(JSON.parse(all[k])); }
-    }
-    return json({ count: list.length, facilities: list });
+    return json(liveLatest(e.parameter.facility));      // LiveApi.gs: crowd + energy + environment
   }
 
   return json({ ok: true, service: "Environment Logger",
