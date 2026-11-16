@@ -74,7 +74,6 @@ const unsigned long MQTT_RETRY_INTERVAL = 10000UL;
 // =====================================================
 // 4. OBJECTS
 // =====================================================
-can ex
 WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
 

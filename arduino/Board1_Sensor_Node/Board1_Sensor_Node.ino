@@ -102,10 +102,6 @@ int ldr = 0;
 unsigned long lastMotion = 0;
 int lcdTick = 0;
 
-// Occupancy countdown timer
-bool occupancyShowing = false;  // true when showing countdown on LCD
-unsigned long occupancyStart = 0;
-const unsigned long OCCUPANCY_TIMEOUT_DISPLAY = 180000;  // 3 minutes countdown
 
 // NEW: decided by Board 2 and reported back (-1 = not known)
 int energyLed = -1;           // 1 = LED on, 0 = off
@@ -265,11 +261,6 @@ const char* ambientText(const char* unknown) {
   return energyDark ? "DARK" : "BRIGHT";
 }
 
-// Get seconds remaining from a timeout
-int secondsRemaining(unsigned long start, unsigned long timeout) {
-  return (timeout - (millis() - start)) / 1000;
-}
-
 // ================= LOCATION MENU =================
 void selectLocation() {
   lcdReset();
@@ -285,7 +276,7 @@ void selectLocation() {
       lastShown = -1;
     }
 
-    int secondsLeft = secondsRemaining(lastPress, SELECT_TIMEOUT) + 1;
+    int secondsLeft = (SELECT_TIMEOUT - (millis() - lastPress)) / 1000 + 1;
     if (secondsLeft != lastShown) {
       char line[17];
       snprintf(line, sizeof(line), ">%-10s %ds", LOC_IDS[locIdx], secondsLeft);
@@ -555,27 +546,19 @@ void loop() {
     if (haveData) {
       char line0[17], line1[17];
 
-      // Show countdown only when occupied
-      if (occupied && !occupancyShowing) {
-        occupancyShowing = true;
-        occupancyStart = now;
-      }
-
-      if (occupancyShowing) {
-        int secondsLeft = secondsRemaining(occupancyStart, OCCUPANCY_TIMEOUT_DISPLAY);
-        if (secondsLeft > 0) {
-          snprintf(line0, sizeof(line0), "OCCUPIED: %d s", secondsLeft);
-          snprintf(line1, sizeof(line1), "LED:%s FAN:%d%%", ledText("--"), energyFan >= 0 ? energyFan : 0);
-        } else {
-          snprintf(line0, sizeof(line0), "VACANT");
-          snprintf(line1, sizeof(line1), "No motion");
-          occupancyShowing = false;
-        }
-      } else {
-        // Normal page 1: readings
+      // Page 1: sensor readings | Page 2: occupancy + Board 2 status
+      if (lcdTick < PAGE_TICKS) {
         snprintf(line0, sizeof(line0), "%d%cC %d%% S:%d", (int)(temp + 0.5), DEGREE_CHAR, (int)(hum + 0.5), sound);
         snprintf(line1, sizeof(line1), "%s %s C:%d", LOC_IDS[locIdx], hvacText("--"), crowd);
+      } else {
+        snprintf(line0, sizeof(line0), "%s %s", pirReady ? (occupied ? "OCCUPIED" : "VACANT") : "WARMUP", ambientText("--"));
+        if (energyOnline() && energyFan >= 0) {
+          snprintf(line1, sizeof(line1), "LED:%-3s FAN:%d%%", ledText("--"), energyFan);
+        } else {
+          snprintf(line1, sizeof(line1), "Board 2: no link");
+        }
       }
+      lcdTick = (lcdTick + 1) % (2 * PAGE_TICKS);
 
       lcdLine(0, line0, lastLine0);
       lcdLine(1, line1, lastLine1);
