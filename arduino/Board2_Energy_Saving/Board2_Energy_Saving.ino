@@ -31,8 +31,8 @@
 // 1. SETTINGS (edit these)
 // =====================================================
 
-char ssid[] = "weibin";                           // must be the same network as Board 1's broker access
-char pass[] = "31415926";              // fill in before uploading (not kept in the public repo)
+char ssid[] = "YOUR_WIFI_SSID";                           // must be the same network as Board 1's broker access
+char pass[] = "YOUR_WIFI_PASSWORD";              // fill in before uploading (not kept in the public repo)
 
 const char broker[] = "broker.emqx.io"; 
 const int MQTT_PORT = 1883;
@@ -49,6 +49,11 @@ const int FAN_PIN = 9;
 const unsigned long OFF_DELAY_MS = 120000UL;     // 2 minutes
 unsigned long lastOccupiedMs = 0;                // last time the room was reported occupied
 bool haveOccupied = false;                       // true once an occupied report has been seen
+
+// Fan control from the MQTT panel: "LOC:VALUE" on sitg7/room1/cmd/fan
+String currentLocation = "";                     // location ID Board 1 reports (sitg7/room1/location)
+bool manualFan = false;                          // true = manual speed, false = automatic rule
+int manualFanPct = 0;                            // manual speed, 0-100
 
 // =====================================================
 // 3. THRESHOLDS AND TIMING
@@ -140,6 +145,41 @@ void applyCrowdLevel(String value) {
   }
 }
 
+// Fan command: "LOC:VALUE"
+//   LOC    must equal this board's location (sitg7/room1/location), or the command is ignored
+//   VALUE  AUTO | OFF | LOW | MEDIUM | HIGH | 0-100 (percent)
+void handleFanCommand(String v) {
+  int colon = v.indexOf(':');
+  if (colon < 0) { Serial.println("ERROR: fan command must be LOC:VALUE"); return; }
+  String loc = v.substring(0, colon);
+  String val = v.substring(colon + 1);
+  loc.trim();
+  val.trim();
+
+  if (currentLocation.length() == 0 || loc != currentLocation) {
+    Serial.println("Fan command ignored: location does not match this board");
+    return;
+  }
+  if (val == "AUTO") {
+    manualFan = false;
+    Serial.println("Fan: back to AUTO");
+    return;
+  }
+  int pct = -1;
+  if (val == "OFF")         { pct = 0; }
+  else if (val == "LOW")    { pct = FAN_LOW; }
+  else if (val == "MEDIUM") { pct = FAN_MEDIUM; }
+  else if (val == "HIGH")   { pct = FAN_HIGH; }
+  else if (val.length() > 0 && isDigit(val[0])) { pct = val.toInt(); }
+
+  if (pct < 0 || pct > 100) { Serial.println("ERROR: invalid fan value"); return; }
+  manualFan = true;
+  manualFanPct = pct;
+  Serial.print("Fan: manual ");
+  Serial.print(pct);
+  Serial.println("%");
+}
+
 void onMqttMessage(int messageSize) {
   (void)messageSize;
 
@@ -179,6 +219,15 @@ void onMqttMessage(int messageSize) {
     if (!simulationMode) { applyCrowdLevel(value); }          // LIVE: crowd comes from Board 1
   }
 
+  else if (topic == "sitg7/room1/location") {
+    currentLocation = value;                                  // from Board 1
+  }
+
+  // ---------- fan command from the MQTT panel ----------
+  else if (topic.endsWith("/cmd/fan")) {
+    handleFanCommand(value);
+  }
+
   // ---------- phone commands ----------
   else if (topic.endsWith("/cmd/mode")) {
     if (value == "LIVE") { simulationMode = false; Serial.println("Mode: LIVE"); }
@@ -215,6 +264,7 @@ bool connectMQTT() {
     mqttClient.subscribe("sitg7/room1/occupancy");
     mqttClient.subscribe("sitg7/room1/ldr");
     mqttClient.subscribe("sitg7/room1/crowd");
+    mqttClient.subscribe("sitg7/room1/location");     // from Board 1: which location this board is in
     mqttClient.subscribe("sitg7/room1/cmd/#");        // from the phone
     return true;
   }
@@ -393,7 +443,8 @@ String fanLevel() {
 void updateFan(unsigned long now) {
   String level = fanLevel();
   int target = 0;                                   // OFF or no data -> stopped
-  if (level == "LOW")              { target = FAN_LOW; }
+  if (manualFan)                   { target = manualFanPct; }   // panel override until AUTO
+  else if (level == "LOW")         { target = FAN_LOW; }
   else if (level == "MEDIUM")      { target = FAN_MEDIUM; }
   else if (level == "HIGH")        { target = FAN_HIGH; }
 

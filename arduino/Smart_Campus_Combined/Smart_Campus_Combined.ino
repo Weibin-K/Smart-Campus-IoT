@@ -31,7 +31,7 @@
 // =====================================================
 
 char ssid[] = "weibin";
-char pass[] = "31415926";
+char pass[] = "YOUR_WIFI_PASSWORD";
 
 const char BROKER[] = "broker.hivemq.com";
 const int MQTT_PORT = 1883;

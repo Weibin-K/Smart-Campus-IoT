@@ -20,7 +20,7 @@
 
 // ================= SETTINGS =================
 const char ssid[] = "weibin";
-const char pass[] = "31415926";
+const char pass[] = "YOUR_WIFI_PASSWORD";
 
 const char broker[] = "broker.hivemq.com";
 const int  port = 1883;
@@ -29,7 +29,7 @@ const char TOPIC_BASE[] = "sitg7/room1/";
 
 const char GAS_HOST[] = "script.google.com";
 const char DEPLOY_ID[] = "AKfycbzlVsZVIWkLt818jMaaC5FyiXxicgMHUnufDmqna2tomFhcsaretr3Tu6svYqhBWqiJOQ";
-const char API_KEY[] = "env-g7-8f3k2q";      // must match ENV_API_KEY in Script Properties
+const char API_KEY[] = "YOUR_ENV_API_KEY";      // must match ENV_API_KEY in Script Properties
 
 const unsigned long SEND_INTERVAL  = 2000;   // sensors + MQTT
 const unsigned long SHEET_INTERVAL = 15000;  // Google Sheet

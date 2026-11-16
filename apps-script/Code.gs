@@ -15,11 +15,11 @@ const HEADERS = ["Timestamp","Facility ID","Facility Name","Category",
 
 const SETTINGS_HEADERS = ["Parameter","Value","Unit","Reason"];
 const DEFAULT_SETTINGS = [
-  ["TEMP_HIGH",  28,   "°C",  "75th percentile of indoor readings"],
+  ["TEMP_HIGH",  31,   "°C",  "Energy handover: high temperature"],
   ["TEMP_LOW",   22,   "°C",  "Below comfort range"],
   ["COMFY_LOW",  23.5, "°C",  "Start of comfort zone (green on LCD)"],
   ["COMFY_HIGH", 26.5, "°C",  "End of comfort zone (green on LCD)"],
-  ["HUM_HIGH",   70,   "%",   "75th percentile indoor"],
+  ["HUM_HIGH",   75,   "%",   "Energy handover: high humidity"],
   ["SOUND_MED",  300,  "raw", "Quiet vs talking test"],
   ["SOUND_HIGH", 600,  "raw", "Busy food court test"]
 ];

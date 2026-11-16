@@ -1784,8 +1784,21 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
     out += '<path class="pline" d="' + d + '"/><line class="pcross" x1="0" x2="0" y1="' + top + '" y2="' + base + '" visibility="hidden"/><circle class="pdot" r="4.5" cx="0" cy="0" visibility="hidden"/></svg>';
     return out;
   }
+  // Discussion rooms (DR1, DR2, DR3): show booking status, not occupancy
+  function bookingText(b) {
+    if (!b) { return "No booking status yet."; }
+    if (b === "AVAILABLE" || b === "VACANT") { return "Available"; }
+    if (b === "BOOKED_BUT_VACANT") { return "Booked, not in use yet"; }
+    if (b === "BOOKED_&_OCCUPIED") { return "Booked and in use"; }
+    return esc(b.replace(/_/g, " ").toLowerCase());
+  }
   function peopleSection(s) {
     var f = feedFor(s.key), H = hist[s.key], h = '<div class="psec"><h3>People inside today</h3>';
+    if (s.fid && s.fid.indexOf("DR") === 0) {
+      var dr = liveFac[s.key];
+      h = '<div class="psec"><h3>Room booking</h3>';
+      return h + '<p class="pstat"><b>' + esc(bookingText(dr ? dr.booking : "")) + "</b></p>" + (dr ? liveBadge(dr, "crowdAt") : "") + "</div>";
+    }
     if (!f) {
       var lr = liveFac[s.key], lh = liveHist[s.key];
       if (lr && lr.count !== null) {
@@ -2561,7 +2574,8 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
             count: count, capacity: cap > 0 ? cap : null, pct: pct, status: String(r.crowd_status || "").trim().toUpperCase(),
             light: onOff(r.light_on), fan: num(r.fan_pct), hvac: hv === "MED" ? "MEDIUM" : hv,
             bright: num(r.brightness), mode: String(r.mode || "").trim().toUpperCase(),
-            temp: num(r.temperature), hum: num(r.humidity), comfort: String(r.comfort || "").trim().toUpperCase()};
+            temp: num(r.temperature), hum: num(r.humidity), comfort: String(r.comfort || "").trim().toUpperCase(),
+            booking: String(r.booking || "").trim().toUpperCase()};
   }
   function applyLive(list) {
     var n = 0;

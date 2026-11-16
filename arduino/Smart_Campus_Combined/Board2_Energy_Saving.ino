@@ -32,7 +32,7 @@
 // =====================================================
 
 char ssid[] = "weibin";                           // must be the same network as Board 1's broker access
-char pass[] = "31415926";
+char pass[] = "YOUR_WIFI_PASSWORD";
 
 const char BROKER[] = "broker.hivemq.com";
 const int MQTT_PORT = 1883;

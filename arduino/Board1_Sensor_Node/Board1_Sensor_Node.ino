@@ -20,8 +20,8 @@
 #define DEGREE_CHAR 223       // ° symbol for LCD
 
 // ================= SETTINGS =================
-const char ssid[] = "weibin";
-const char pass[] = "31415926";   // fill in before uploading (not kept in the public repo)
+const char ssid[] = "YOUR_WIFI_SSID";
+const char pass[] = "YOUR_WIFI_PASSWORD";   // fill in before uploading (not kept in the public repo)
 
 const char broker[] = "broker.emqx.io";
 const int  port = 1883;
@@ -30,7 +30,7 @@ const char TOPIC_BASE[] = "sitg7/room1/";
 
 const char GAS_HOST[] = "script.google.com";
 const char DEPLOY_ID[] = "AKfycbzlVsZVIWkLt818jMaaC5FyiXxicgMHUnufDmqna2tomFhcsaretr3Tu6svYqhBWqiJOQ";
-const char API_KEY[] = "env-g7-8f3k2q";      // must match ENV_API_KEY in Script Properties
+const char API_KEY[] = "YOUR_ENV_API_KEY";      // must match ENV_API_KEY in Script Properties
 
 const unsigned long SEND_INTERVAL  = 2000;   // sensors + MQTT
 const unsigned long SHEET_INTERVAL = 15000;  // Google Sheet
@@ -608,6 +608,9 @@ void loop() {
     strcpy(buffer[bufferIdx].occupancy, occupied ? "OCCUPIED" : "VACANT");
     bufferIdx++;
     Serial.print(F("Buffered reading ")); Serial.print(bufferIdx); Serial.println(F("/4"));
+
+    // Sensor row with Board 2's lighting, fan and HVAC values (the Light Status / Fan Speed columns)
+    sendToSheet();
   }
 
   // every 60 s: Send batch of 4 readings to Sheet
