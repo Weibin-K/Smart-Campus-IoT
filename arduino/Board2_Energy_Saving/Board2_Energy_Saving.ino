@@ -31,8 +31,8 @@
 // 1. SETTINGS (edit these)
 // =====================================================
 
-char ssid[] = "weibin";                           // must be the same network as Board 1's broker access
-char pass[] = "31415926";              // fill in before uploading (not kept in the public repo)
+char ssid[] = "YOUR_WIFI_SSID";                           // must be the same network as Board 1's broker access
+char pass[] = "YOUR_WIFI_PASSWORD";              // fill in before uploading (not kept in the public repo)
 
 const char broker[] = "broker.emqx.io"; 
 const int MQTT_PORT = 1883;

@@ -20,8 +20,8 @@
 #define DEGREE_CHAR 223       // ° symbol for LCD
 
 // ================= SETTINGS =================
-const char ssid[] = "weibin";
-const char pass[] = "31415926";   // fill in before uploading (not kept in the public repo)
+const char ssid[] = "YOUR_WIFI_SSID";
+const char pass[] = "YOUR_WIFI_PASSWORD";   // fill in before uploading (not kept in the public repo)
 
 const char broker[] = "broker.emqx.io";
 const int  port = 1883;
