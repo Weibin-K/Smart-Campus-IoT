@@ -1860,10 +1860,12 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
           return '<button data-p="' + [20, 50, 75, 95][k] + '" style="--cc:var(' + l[1] + ')">' + l[0] + "</button>";
         }).join("") + "</div></div>";
       }
-      var dow = placeDow === null ? new Date().getDay() : placeDow;
-      h += '<div class="psec"><h3>Popular times</h3><div class="pdays" role="tablist" aria-label="Day">' + [1, 2, 3, 4, 5, 6, 0].map(function (d) {
-        return '<button role="tab" data-dow="' + d + '" aria-selected="' + (d === dow ? "true" : "false") + '">' + DAYS[d] + "</button>";
-      }).join("") + "</div>" + popChart(s, dow) + "</div>";
+      if (s.type === "food") {      // popular times for food courts only (from student reports and Google data)
+        var dow = placeDow === null ? new Date().getDay() : placeDow;
+        h += '<div class="psec"><h3>Popular times</h3><div class="pdays" role="tablist" aria-label="Day">' + [1, 2, 3, 4, 5, 6, 0].map(function (d) {
+          return '<button role="tab" data-dow="' + d + '" aria-selected="' + (d === dow ? "true" : "false") + '">' + DAYS[d] + "</button>";
+        }).join("") + "</div>" + popChart(s, dow) + "</div>";
+      }
       h += peopleSection(s) + envSection(s);      // room controls + lights/fan/HVAC moved to indexbackup.html (maintenance)
     } else {
       h += '<div class="psec"><p class="pnote">' + esc(c.id === "wc" ? "Toilets here: " + (o.kinds || []).join(", ") + "." : c.id === "print" ? "Printing on " + levelName(o.lv) + (o.b ? " of " + o.b : "") + "." : (registry[o.id] || {}).sub || "") +
