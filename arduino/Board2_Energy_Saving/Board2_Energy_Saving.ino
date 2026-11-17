@@ -68,11 +68,11 @@ const float TEMP_HIGH_THRESHOLD = 31.0;
 const float HUM_HIGH_THRESHOLD = 75.0;
 
 // Fan speed in percent for each HVAC level
-const int FAN_LOW = 70;         // occupied, temperature and humidity normal
-const int FAN_LOW_MEDIUM = 55;
-const int FAN_MEDIUM = 85;      // occupied, one of temperature or humidity high
-const int FAN_MEDIUM_HIGH = 85;
-const int FAN_HIGH = 100;       // occupied, temperature and humidity both high
+const int FAN_LOW = 70;         // HVAC LOW
+const int FAN_LOW_MEDIUM = 78;  // HVAC LOW-MEDIUM
+const int FAN_MEDIUM = 85;      // HVAC MEDIUM
+const int FAN_MEDIUM_HIGH = 92; // HVAC MEDIUM-HIGH
+const int FAN_HIGH = 100;       // HVAC HIGH
 const unsigned long FAN_KICK_MS = 300UL;          // full power for a moment so a stopped fan spins up
 
 const unsigned long DATA_TIMEOUT = 20000UL;       // nothing from Board 1 for this long = data lost
@@ -418,7 +418,7 @@ void updateHVAC() {
     return;
   }
 
-  hvacDetailed = calculateHVAC(effectiveTemperature, effectiveHumidity, crowdLevel);
+  hvacDetailed = calculateHVAC(effectiveTemperature, effectiveHumidity, hvacCrowd());
 
   // four-level version for Board 1's LCD and dashboards that only know OFF / LOW / MEDIUM / HIGH
   if (hvacDetailed == "LOW-MEDIUM") { hvacStandard = "MEDIUM"; }
@@ -435,22 +435,29 @@ void updateHVAC() {
 //   occupied, NORMAL air   -> LOW
 //   occupied, HIGH air     -> MEDIUM   (temperature or humidity high)
 // Uses the handover table with crowd = 1 (one person present) for the occupied case.
+// Crowd input for the handover HVAC table:
+//   vacant              -> 0 (HVAC OFF)
+//   occupied            -> at least 1, or the crowd level if it is higher (LIVE: Board 1; SIMULATION: phone)
+int hvacCrowd() {
+  if (!roomValid || !occupied) { return 0; }
+  return crowdLevel < 1 ? 1 : crowdLevel;
+}
+
+// Fan level = handover HVAC table (calculateHVAC), so the fan and the hvac topic always agree
 String fanLevel() {
   if (!roomValid || !occupied || !effectiveDataValid) { return "OFF"; }
-  bool tHigh = (effectiveTemperature >= TEMP_HIGH_THRESHOLD);
-  bool hHigh = (effectiveHumidity >= HUM_HIGH_THRESHOLD);
-  if (tHigh && hHigh) { return "HIGH"; }        // temperature and humidity both high
-  if (tHigh || hHigh) { return "MEDIUM"; }      // one of them high
-  return "LOW";                                 // both normal
+  return calculateHVAC(effectiveTemperature, effectiveHumidity, hvacCrowd());
 }
 
 void updateFan(unsigned long now) {
   String level = fanLevel();
   int target = 0;                                   // OFF or no data -> stopped
-  if (manualFan)                   { target = manualFanPct; }   // panel override until AUTO
-  else if (level == "LOW")         { target = FAN_LOW; }
-  else if (level == "MEDIUM")      { target = FAN_MEDIUM; }
-  else if (level == "HIGH")        { target = FAN_HIGH; }
+  if (manualFan)                        { target = manualFanPct; }   // panel override until AUTO
+  else if (level == "LOW")              { target = FAN_LOW; }
+  else if (level == "LOW-MEDIUM")       { target = FAN_LOW_MEDIUM; }
+  else if (level == "MEDIUM")           { target = FAN_MEDIUM; }
+  else if (level == "MEDIUM-HIGH")      { target = FAN_MEDIUM_HIGH; }
+  else if (level == "HIGH")             { target = FAN_HIGH; }
 
   // starting from a stop: short full-power kick
   if (fanPercent == 0 && target > 0) {
