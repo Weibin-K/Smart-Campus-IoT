@@ -31,8 +31,8 @@
 // 1. SETTINGS (edit these)
 // =====================================================
 
-char ssid[] = "YOUR_WIFI_SSID";                           // must be the same network as Board 1's broker access
-char pass[] = "YOUR_WIFI_PASSWORD";              // fill in before uploading (not kept in the public repo)
+char ssid[] = "weibin";                           // must be the same network as Board 1's broker access
+char pass[] = "31415926";              // fill in before uploading (not kept in the public repo)
 
 const char broker[] = "broker.emqx.io"; 
 const int MQTT_PORT = 1883;
@@ -53,6 +53,7 @@ bool haveOccupied = false;                       // true once an occupied report
 // Fan control from the MQTT panel: "LOC:VALUE" on sitg7/room1/cmd/fan
 String currentLocation = "";                     // location ID Board 1 reports (sitg7/room1/location)
 bool manualFan = false;                          // true = manual speed, false = automatic rule
+bool simOccupied = false;                        // SIMULATION: occupancy set from the panel (sitg7/room1/cmd/occupancy)
 int manualFanPct = 0;                            // manual speed, 0-100
 
 // =====================================================
@@ -145,6 +146,16 @@ void applyCrowdLevel(String value) {
   }
 }
 
+// Occupancy command from the panel (SIMULATION mode only): OCCUPIED or VACANT
+void handleOccupancyCommand(String v) {
+  if (!simulationMode) { Serial.println("Occupancy command ignored: not in SIMULATION mode"); return; }
+  if (v == "OCCUPIED") { simOccupied = true; }
+  else if (v == "VACANT") { simOccupied = false; }
+  else { Serial.println("ERROR: occupancy must be OCCUPIED or VACANT"); return; }
+  Serial.print("Occupancy (simulated): ");
+  Serial.println(simOccupied ? "OCCUPIED" : "VACANT");
+}
+
 // Fan command: "LOC:VALUE"
 //   LOC    must equal this board's location (sitg7/room1/location), or the command is ignored
 //   VALUE  AUTO | OFF | LOW | MEDIUM | HIGH | 0-100 (percent)
@@ -226,6 +237,9 @@ void onMqttMessage(int messageSize) {
   // ---------- fan command from the MQTT panel ----------
   else if (topic.endsWith("/cmd/fan")) {
     handleFanCommand(value);
+  }
+  else if (topic.endsWith("/cmd/occupancy")) {
+    handleOccupancyCommand(value);
   }
 
   // ---------- phone commands ----------
@@ -333,7 +347,10 @@ void checkSensorData() {
 void updateLighting() {
   if (roomValid) {
     // occupied stays ON for OFF_DELAY_MS after the room is reported vacant (LED and fan)
-    if (reportedOccupied) {
+    if (simulationMode) {
+      occupied = simOccupied;                        // SIMULATION: panel value, no hold
+    }
+    else if (reportedOccupied) {
       occupied = true;
       lastOccupiedMs = millis();
       haveOccupied = true;
