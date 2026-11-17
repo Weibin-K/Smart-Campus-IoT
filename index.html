@@ -3264,6 +3264,25 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
 
 </html>
 
+<script>
+// Light / Dark toggle. Without a choice, the page follows the device setting.
+(function () {
+  var root = document.documentElement, key = "siteTheme";
+  try { var saved = localStorage.getItem(key); if (saved === "light" || saved === "dark") { root.setAttribute("data-theme", saved); } } catch (e) {}
+  var b = document.createElement("button");
+  b.id = "themeToggle"; b.type = "button"; b.textContent = "Light / Dark";
+  b.setAttribute("aria-label", "Switch between light and dark mode");
+  b.style.cssText = "position:fixed;top:8px;right:8px;z-index:1000;font:600 12px/1 system-ui,sans-serif;padding:7px 11px;border-radius:999px;border:1px solid #888;background:#fff;color:#111;cursor:pointer;";
+  b.onclick = function () {
+    var cur = root.getAttribute("data-theme");
+    if (cur !== "light" && cur !== "dark") { cur = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"; }
+    var next = cur === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem(key, next); } catch (e) {}
+  };
+  document.body.appendChild(b);
+})();
+</script>
 <div id="credit-mark" style="position:fixed;left:8px;bottom:6px;z-index:900;font:600 11px/1.2 system-ui,sans-serif;color:var(--muted,#555);opacity:.7;pointer-events:none;">Weibin · SIT Group 7</div>
 </body>
 </html>
