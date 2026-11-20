@@ -1,10 +1,3 @@
-// BOARD 1 - SENSOR NODE (Temp_Hum_Sound + PIR + light sensor). Added parts are marked NEW.
-// This board only senses and reports. Board 2 (Energy Saving module) decides the HVAC level,
-// the LED and the fan, and reports them back over MQTT for the LCD and the Google Sheet.
-// PINS: A0 DHT11 | A1 sound | A2 LDR | D2 PIR | D4 button | SDA/SCL LCD
-// GOOGLE SHEET: the sensor row every 15 s (same fields as before), plus Board 2's lights / fan / HVAC
-// as a {"type":"energy"} post, which apps-script/LiveApi.gs turns into light_on, fan_pct and hvac for the map.
-
 #include <WiFiNINA.h>
 #include <ArduinoMqttClient.h>
 #include <Wire.h>
@@ -14,14 +7,13 @@
 
 #define dht_apin A0
 #define sound_pin A1
-#define ldr_pin A2            // light sensor (LDR divider)
-#define pir_pin 2             // PIR output
+#define ldr_pin A2
+#define pir_pin 2
 #define button_pin 4
-#define DEGREE_CHAR 223       // ° symbol for LCD
+#define DEGREE_CHAR 223
 
-// ================= SETTINGS =================
 const char ssid[] = "weibin";
-const char pass[] = "31415926";   // fill in before uploading (not kept in the public repo)
+const char pass[] = "31415926";
 
 const char broker[] = "broker.emqx.io";
 const int  port = 1883;
@@ -30,25 +22,22 @@ const char TOPIC_BASE[] = "sitg7/room1/";
 
 const char GAS_HOST[] = "script.google.com";
 const char DEPLOY_ID[] = "AKfycbzlVsZVIWkLt818jMaaC5FyiXxicgMHUnufDmqna2tomFhcsaretr3Tu6svYqhBWqiJOQ";
-const char API_KEY[] = "YOUR_ENV_API_KEY";      // must match ENV_API_KEY in Script Properties
+const char API_KEY[] = "env-g7-8f3k2q";
 
-const unsigned long SEND_INTERVAL  = 2000;   // sensors + MQTT
-const unsigned long SHEET_INTERVAL = 15000;  // Google Sheet
-const unsigned long ENERGY_INTERVAL = 60000; // NEW: lights / fan / HVAC go to the Sheet at least this often...
-const unsigned long ENERGY_MIN_GAP  = 20000; // NEW: ...and at most this often while they keep changing
-const unsigned long SELECT_TIMEOUT = 5000;   // location menu auto-confirm
+const unsigned long SEND_INTERVAL  = 2000;
+const unsigned long SHEET_INTERVAL = 60000;
+const unsigned long ENERGY_MIN_GAP  = 20000;
+const unsigned long SELECT_TIMEOUT = 5000;
 
-const float TEMP_OFFSET = 0.0;               // calibration
+const float TEMP_OFFSET = 0.0;
 const float HUM_OFFSET  = 0.0;
-// NEW: PIR
-const unsigned long VACANCY_TIMEOUT = 3000;  // room counts as empty this long after the PIR goes LOW
-const unsigned long PIR_WARMUP = 60000;      // PIR is ignored for the first 60 s after power-on
 
-const unsigned long LINK_TIMEOUT = 10000;    // NEW: nothing from Board 2 for this long = no link
-const int PAGE_TICKS = 2;                    // NEW: LCD swaps page every 2 readings (4 s)
+const unsigned long VACANCY_TIMEOUT = 3000;
+const unsigned long PIR_WARMUP = 60000;
 
+const unsigned long LINK_TIMEOUT = 10000;
+const int PAGE_TICKS = 2;
 
-// ================= LOCATIONS =================
 const int NUM_LOC = 27;
 const char* const LOC_IDS[NUM_LOC] = {
   "GYM", "GYM2", "GYM3",
@@ -60,7 +49,7 @@ const char* const LOC_IDS[NUM_LOC] = {
   "W1L5", "W1L6",
   "CLS", "OUT", "DR2", "DR3"
 };
-const char* const LOC_NAMES[NUM_LOC] = {     // max 16 characters
+const char* const LOC_NAMES[NUM_LOC] = {
   "Gym 1", "Gym 2", "Outdoor Gym",
   "Learning Commons", "Book Collection", "Lib Amphitheatre", "Lounge Library",
   "E4 Food Court", "W3 Food Court", "Takeaway Kiosk",
@@ -71,14 +60,12 @@ const char* const LOC_NAMES[NUM_LOC] = {     // max 16 characters
   "Classroom", "Outdoor Area", "Discussion Rm 2", "Discussion Rm 3"
 };
 
-// ================= LCD COLORS =================
-const byte RGB_GREEN[3] = {0, 255, 60};    // Connected + OK
-const byte RGB_BLUE[3] = {0, 150, 255};   // Connecting
-const byte RGB_RED[3] = {255, 0, 60};     // Error/offline
+const byte RGB_GREEN[3] = {0, 255, 60};
+const byte RGB_BLUE[3] = {0, 150, 255};
+const byte RGB_RED[3] = {255, 0, 60};
 
 const char* const HVAC_NAMES[4] = {"OFF", "LOW", "MEDIUM", "HIGH"};
 
-// ================= OBJECTS & STATE =================
 DFRobot_RGBLCD1602 lcd(0x2D, 16, 2);
 dht DHT;
 WiFiClient wifiClient;
@@ -91,10 +78,16 @@ int hvacLevel = -1;
 float temp = 0, hum = 0;
 float soundAvg = 0;
 int sound = 0;
-int soundRaw = 0;             // raw sound peak-to-peak
+int soundRaw = 0;
 bool haveData = false;
 
-// PIR + light sensor (sensed on this board)
+const unsigned long DHT_STALE_MS = 10000;
+unsigned long lastGoodDht = 0;
+
+bool dhtFresh() {
+  return haveData && (millis() - lastGoodDht < DHT_STALE_MS);
+}
+
 bool pirReady = false;
 bool occupied = false;
 bool sentOccupied = false;
@@ -102,38 +95,24 @@ int ldr = 0;
 unsigned long lastMotion = 0;
 int lcdTick = 0;
 
-
-// NEW: decided by Board 2 and reported back (-1 = not known)
-int energyLed = -1;           // 1 = LED on, 0 = off
-int energyDark = -1;          // 1 = dark, 0 = bright
-int energyFan = -1;           // fan speed in %
+int energyLed = -1;
+int energyDark = -1;
+int energyFan = -1;
 bool energySeen = false;
 unsigned long lastEnergyMsg = 0;
 
-// NEW: what was last sent to the Sheet as the "energy" record
 int sentLed = -2, sentFan = -2, sentHvac = -2;
 unsigned long lastEnergySheet = 0;
-
-// Batch buffer: store 4 readings before POSTing to Sheet
-struct Reading {
-  float temp, hum;
-  int sound, ldr;
-  char occupancy[9];  // "OCCUPIED" or "VACANT"
-};
-Reading buffer[4];
-int bufferIdx = 0;
-unsigned long lastBatchPost = 0;
 
 unsigned long lastSend = 0, lastSheet = 0, lastLight = 0;
 
 char lastLine0[17] = "";
 char lastLine1[17] = "";
 
-// ================= BUTTON (interrupt) =================
 volatile bool btnFlag = false;
 volatile unsigned long lastIsr = 0;
 
-void onButton() {                        // keep tiny: just set a flag
+void onButton() {
   unsigned long now = millis();
   if (now - lastIsr > 200) {
     btnFlag = true;
@@ -149,23 +128,20 @@ bool buttonPressed() {
   return false;
 }
 
-// ================= LCD BACKLIGHT =================
 void setColor(const byte rgb[3]) {
   lcd.setRGB(rgb[0], rgb[1], rgb[2]);
 }
 
 void updateBacklight() {
   if (!mqttClient.connected()) {
-    setColor(RGB_RED);    // Red = offline
+    setColor(RGB_RED);
   } else if (WiFi.status() == WL_CONNECTED) {
-    setColor(RGB_GREEN);  // Green = connected
+    setColor(RGB_GREEN);
   } else {
-    setColor(RGB_BLUE);   // Blue = connecting
+    setColor(RGB_BLUE);
   }
 }
 
-// ================= LCD =================
-// only rewrites a line if its text changed (no flicker, less I2C traffic)
 void lcdLine(int row, const char* text, char* last) {
   if (strcmp(text, last) != 0) {
     char padded[17];
@@ -182,8 +158,6 @@ void lcdReset() {
   lastLine1[0] = '\0';
 }
 
-// ================= SENSING: PIR + LIGHT SENSOR (NEW) =================
-// Only reads. Sets occupied and ldr. Runs every loop pass.
 void readRoom() {
   unsigned long now = millis();
 
@@ -200,14 +174,12 @@ void readRoom() {
     }
   }
 
-  analogRead(ldr_pin);                                   // throw-away read (ADC settles after the sound pin)
+  analogRead(ldr_pin);
   ldr = analogRead(ldr_pin);
 }
 
-// ================= LINK WITH BOARD 2 (NEW) =================
-void publish(const char* sub, const char* value);        // defined further down, in CONNECTIONS
+void publish(const char* sub, const char* value);
 
-// tell Board 2 at once when the room becomes occupied or vacant (not only every 2 s)
 void reportOccupancy() {
   if (occupied != sentOccupied && mqttClient.connected()) {
     publish("occupancy", occupied ? "OCCUPIED" : "VACANT");
@@ -215,12 +187,35 @@ void reportOccupancy() {
   }
 }
 
-// true while Board 2 is still reporting
 bool energyOnline() {
   return energySeen && (millis() - lastEnergyMsg < LINK_TIMEOUT);
 }
 
-// Board 2 reports what it decided; keep it for the LCD and the Google Sheet
+char pendingLoc[16] = "";
+bool locPending = false;
+
+void applyPendingLocation() {
+  if (!locPending) { return; }
+  locPending = false;
+  char up[16];
+  int k = 0;
+  for (; pendingLoc[k] && k < 15; k++) { up[k] = toupper(pendingLoc[k]); }
+  up[k] = '\0';
+  for (int i = 0; i < NUM_LOC; i++) {
+    if (strcmp(LOC_IDS[i], up) == 0) {
+      locIdx = i;
+      EEPROM.update(0, locIdx);
+      sentLed = -2;
+      publish("location", LOC_IDS[locIdx]);
+      Serial.print(F("Location set from panel: "));
+      Serial.println(LOC_IDS[locIdx]);
+      return;
+    }
+  }
+  Serial.print(F("ERROR: unknown location from panel: "));
+  Serial.println(up);
+}
+
 void onMqttMessage(int messageSize) {
   (void)messageSize;
   String topic = mqttClient.messageTopic();
@@ -232,8 +227,15 @@ void onMqttMessage(int messageSize) {
   }
   value[n] = '\0';
 
+  if (topic.endsWith("/cmd/location")) {
+    strncpy(pendingLoc, value, 15);
+    pendingLoc[15] = '\0';
+    locPending = true;
+    return;
+  }
+
   if (topic.endsWith("/energy/hvac")) {
-    hvacLevel = -1;                                      // stays -1 for SENSOR_FAULT
+    hvacLevel = -1;
     for (int i = 0; i < 4; i++) {
       if (strcmp(value, HVAC_NAMES[i]) == 0) { hvacLevel = i; }
     }
@@ -247,7 +249,6 @@ void onMqttMessage(int messageSize) {
   lastEnergyMsg = millis();
 }
 
-// text versions of Board 2's decisions; `unknown` is shown when there is nothing to show
 const char* hvacText(const char* unknown) {
   if (hvacLevel < 0) { return unknown; }
   return HVAC_NAMES[hvacLevel];
@@ -261,7 +262,6 @@ const char* ambientText(const char* unknown) {
   return energyDark ? "DARK" : "BRIGHT";
 }
 
-// ================= LOCATION MENU =================
 void selectLocation() {
   lcdReset();
   unsigned long lastPress = millis();
@@ -269,7 +269,7 @@ void selectLocation() {
   Serial.println(F("Select location: press to change, wait 5 s to confirm"));
 
   while (millis() - lastPress < SELECT_TIMEOUT) {
-    if (btnFlag) {                                       // use interrupt directly (faster)
+    if (btnFlag) {
       btnFlag = false;
       locIdx = (locIdx + 1) % NUM_LOC;
       lastPress = millis();
@@ -285,11 +285,11 @@ void selectLocation() {
       lastShown = secondsLeft;
     }
 
-    lcd.setRGB(150, 0, 255);  // purple = menu
+    lcd.setRGB(150, 0, 255);
     if (mqttClient.connected()) { mqttClient.poll(); }
     readRoom();
     reportOccupancy();
-    delay(10);                                           // faster loop (was 20)
+    delay(10);
   }
 
   EEPROM.update(0, locIdx);
@@ -300,51 +300,72 @@ void selectLocation() {
   lcdReset();
   lcdLine(0, "Location set:", lastLine0);
   lcdLine(1, LOC_IDS[locIdx], lastLine1);
-  setColor(RGB_GREEN);  // Green confirmation
+  setColor(RGB_GREEN);
   delay(1200);
   lcdReset();
   lcdLine(0, "Loading data...", lastLine0);
   delay(600);
   lcdReset();
 
-  lastSend = millis() - SEND_INTERVAL;                 // read sensors now
-  lastSheet = millis() - SHEET_INTERVAL + 3000;        // log new location in ~3 s
+  lastSend = millis() - SEND_INTERVAL;
+  lastSheet = millis() - SHEET_INTERVAL + 3000;
 }
 
-// ================= SENSORS =================
-int readSoundRaw() {
-  unsigned long start = millis();
+const unsigned long SOUND_SLICE_MS = 10;
+const int SOUND_WINDOW_SLICES = 5;
+const float SOUND_ALPHA = 0.1;
+
+int sliceMin = 1023, sliceMax = 0;
+int sliceMinArr[SOUND_WINDOW_SLICES], sliceMaxArr[SOUND_WINDOW_SLICES];
+int sliceCount = 0, sliceNext = 0;
+unsigned long sliceStart = 0;
+bool soundStarted = false;
+
+void updateSound() {
+  unsigned long now = millis();
+  if (!soundStarted) { sliceStart = now; soundStarted = true; }
+
+  int v = analogRead(sound_pin);
+  if (v < sliceMin) { sliceMin = v; }
+  if (v > sliceMax) { sliceMax = v; }
+
+  if (now - sliceStart < SOUND_SLICE_MS) { return; }
+
+  sliceMinArr[sliceNext] = sliceMin;
+  sliceMaxArr[sliceNext] = sliceMax;
+  sliceNext = (sliceNext + 1) % SOUND_WINDOW_SLICES;
+  if (sliceCount < SOUND_WINDOW_SLICES) { sliceCount++; }
+  sliceMin = 1023;
+  sliceMax = 0;
+  sliceStart = now;
+
   int hi = 0, lo = 1023;
-  while (millis() - start < 50) {
-    int v = analogRead(sound_pin);
-    if (v > hi) { hi = v; }
-    if (v < lo) { lo = v; }
+  for (int i = 0; i < sliceCount; i++) {
+    if (sliceMaxArr[i] > hi) { hi = sliceMaxArr[i]; }
+    if (sliceMinArr[i] < lo) { lo = sliceMinArr[i]; }
   }
-  return (hi - lo) * 2;                                // peak-to-peak loudness, amplified 2x
+  soundRaw = (hi - lo) * 2;
+  soundAvg = soundAvg + SOUND_ALPHA * (soundRaw - soundAvg);
+  sound = (int)(soundAvg + 0.5);
 }
 
 void readSensors() {
   int chk = DHT.read11(dht_apin);
   float t = DHT.temperature;
   float h = DHT.humidity;
-  // accept OK (0) or checksum warning (-1) only if the values make sense
+
   if ((chk == 0 || chk == -1) && t > 0 && t < 60 && h > 0 && h <= 100) {
     temp = t + TEMP_OFFSET;
     hum = h + HUM_OFFSET;
     haveData = true;
+    lastGoodDht = millis();
   } else {
     Serial.print(F("DHT read rejected, status "));
     Serial.println(chk);
   }
 
-  soundRaw = readSoundRaw();
-  soundAvg = soundAvg * 0.5 + soundRaw * 0.5;  // faster response
-  sound = (int)(soundAvg + 0.5);
 }
 
-// (the HVAC level is no longer decided here: Board 2 decides it and reports it back)
-
-// ================= CONNECTIONS =================
 void connectWiFi() {
   lcdReset();
   lcdLine(0, "Connecting WiFi", lastLine0);
@@ -376,6 +397,7 @@ void connectMQTT() {
   mqttClient.subscribe("sitg7/room1/energy/lighting");
   mqttClient.subscribe("sitg7/room1/energy/ambient");
   mqttClient.subscribe("sitg7/room1/energy/fan");
+  mqttClient.subscribe("sitg7/room1/cmd/location");
   lcdLine(0, "All connected :)", lastLine0);
   setColor(RGB_GREEN);
   delay(2000);
@@ -390,11 +412,9 @@ void publish(const char* sub, const char* value) {
   mqttClient.endMessage();
 }
 
-// ================= GOOGLE SHEET =================
-// sends one JSON body to the Apps Script and prints the first line of the reply
 void postToSheet(const char* json) {
   if (sheetClient.connectSSL(GAS_HOST, 443)) {
-    sheetClient.setConnectionTimeout(3000);             // timeout after 3s
+    sheetClient.setConnectionTimeout(3000);
     sheetClient.print(F("POST /macros/s/"));
     sheetClient.print(DEPLOY_ID);
     sheetClient.println(F("/exec HTTP/1.1"));
@@ -412,38 +432,19 @@ void postToSheet(const char* json) {
     int n = sheetClient.readBytesUntil('\n', status, sizeof(status) - 1);
     status[n] = '\0';
     Serial.print(F("Sheet reply: "));
-    Serial.println(status);                // "HTTP/1.1 302 ..." = OK
+    Serial.println(status);
     sheetClient.stop();
   } else {
     Serial.println(F("Sheet connection failed"));
   }
 }
 
-// Send batch of 4 readings to Sheet
-void sendBatchToSheet() {
-  char json[900];  // larger buffer for 4 records
-  int n = snprintf(json, sizeof(json), "{\"api_key\":\"%s\",\"type\":\"batch\",\"facility_id\":\"%s\",\"readings\":[",
-    API_KEY, LOC_IDS[locIdx]);
-
-  for (int i = 0; i < 4; i++) {
-    if (i > 0) n += snprintf(json + n, sizeof(json) - n, ",");
-    n += snprintf(json + n, sizeof(json) - n,
-      "{\"temperature\":%d,\"humidity\":%d,\"sound_level\":%d,\"light_level\":%d,\"occupancy\":\"%s\"}",
-      (int)buffer[i].temp, (int)buffer[i].hum, buffer[i].sound, buffer[i].ldr, buffer[i].occupancy);
-  }
-  snprintf(json + n, sizeof(json) - n, "]}");
-
-  Serial.println(F("Sending batch of 4 readings to Sheet..."));
-  postToSheet(json);
-}
-
-// Sensor row: same fields as before. The HVAC value is Board 2's decision (blank while Board 2 is not reporting).
 void sendToSheet() {
   char tBuf[8], hBuf[8];
   dtostrf(temp, 1, 1, tBuf);
   dtostrf(hum, 1, 1, hBuf);
 
-  char json[300];                                        // reduced from 380
+  char json[300];
   int n = snprintf(json, sizeof(json),
     "{\"api_key\":\"%s\",\"facility_id\":\"%s\",\"facility_name\":\"%s\","
     "\"temperature\":%s,\"humidity\":%s,\"sound_level\":%d,"
@@ -451,7 +452,7 @@ void sendToSheet() {
     "\"hvac\":\"%s\",\"data_source\":\"SENSOR\"",
     API_KEY, LOC_IDS[locIdx], LOC_NAMES[locIdx], tBuf, hBuf, sound,
     occupied ? "OCCUPIED" : "VACANT", ldr, hvacText(""));
-  // Light Status and Fan Speed (%) from Board 2. Left out (blank cells) while Board 2 is not reporting.
+
   if (energyLed >= 0) { n += snprintf(json + n, sizeof(json) - n, ",\"lighting\":\"%s\"", energyLed ? "ON" : "OFF"); }
   if (energyFan >= 0) { n += snprintf(json + n, sizeof(json) - n, ",\"fan_speed\":%d", energyFan); }
   if (energyDark >= 0) { n += snprintf(json + n, sizeof(json) - n, ",\"ambient\":\"%s\"", energyDark ? "DARK" : "BRIGHT"); }
@@ -463,14 +464,12 @@ void sendToSheet() {
   postToSheet(json);
 }
 
-// NEW: Board 2's lights, fan and HVAC for this facility, as a type "energy" post.
-// LiveApi.gs keeps the newest one, and the website shows it as Lights, Fan speed and HVAC level.
 void sendEnergyToSheet() {
   char json[200];
   int n = snprintf(json, sizeof(json),
     "{\"api_key\":\"%s\",\"type\":\"energy\",\"facility_id\":\"%s\",\"light_on\":%s,\"fan_pct\":%d",
     API_KEY, LOC_IDS[locIdx], energyLed ? "true" : "false", energyFan);
-  if (hvacLevel >= 0) {                                  // left out while Board 2 reports a sensor fault
+  if (hvacLevel >= 0) {
     n += snprintf(json + n, sizeof(json) - n, ",\"hvac\":\"%s\"", HVAC_NAMES[hvacLevel]);
   }
   snprintf(json + n, sizeof(json) - n, ",\"data_source\":\"SENSOR\"}");
@@ -485,7 +484,6 @@ void sendEnergyToSheet() {
   sentHvac = hvacLevel;
 }
 
-// ================= SETUP / LOOP =================
 void setup() {
   Serial.begin(9600);
   pinMode(button_pin, INPUT_PULLUP);
@@ -493,8 +491,8 @@ void setup() {
 
   pinMode(pir_pin, INPUT);
   mqttClient.onMessage(onMqttMessage);
-  WiFi.setTimeout(5000);                               // reduce WiFi timeout from 50s to 5s
-  mqttClient.setConnectionTimeout(5000);               // faster MQTT timeout
+  WiFi.setTimeout(5000);
+  mqttClient.setConnectionTimeout(5000);
 
   lcd.init();
 
@@ -511,32 +509,28 @@ void setup() {
 
 void loop() {
   unsigned long now = millis();
+  applyPendingLocation();
 
-  // keep connections alive
   if (WiFi.status() != WL_CONNECTED) { connectWiFi(); connectMQTT(); }
   if (!mqttClient.connected()) { connectMQTT(); }
   mqttClient.poll();
 
-  // button -> location menu
   if (buttonPressed()) { selectLocation(); }
 
-  // NEW: sense PIR + light every pass; tell Board 2 at once when the room changes
   readRoom();
+  updateSound();
   reportOccupancy();
-  if (!energyOnline()) { hvacLevel = -1; energyLed = -1; energyDark = -1; energyFan = -1; }   // forget old decisions
+  if (!energyOnline()) { hvacLevel = -1; energyLed = -1; energyDark = -1; energyFan = -1; }
 
-  // crowd level from Serial Monitor (simulated until the PIR board is linked)
   if (Serial.available() > 0) {
     char c = Serial.read();
     if (c >= '0' && c <= '3') { crowd = c - '0'; }
   }
 
-  // every 2 s: sensors -> HVAC -> LCD -> MQTT
   if (now - lastSend >= SEND_INTERVAL) {
     lastSend = now;
     readSensors();
 
-    // NEW: room readings go out even without DHT data, so Board 2 can still run the lights
     char buf[12];
     publish("occupancy", occupied ? "OCCUPIED" : "VACANT");
     sentOccupied = occupied;
@@ -546,7 +540,6 @@ void loop() {
     if (haveData) {
       char line0[17], line1[17];
 
-      // Page 1: sensor readings | Page 2: occupancy + Board 2 status
       if (lcdTick < PAGE_TICKS) {
         snprintf(line0, sizeof(line0), "%d%cC %d%% S:%d", (int)(temp + 0.5), DEGREE_CHAR, (int)(hum + 0.5), sound);
         snprintf(line1, sizeof(line1), "%s %s C:%d", LOC_IDS[locIdx], hvacText("--"), crowd);
@@ -563,21 +556,22 @@ void loop() {
       lcdLine(0, line0, lastLine0);
       lcdLine(1, line1, lastLine1);
 
-      dtostrf(temp, 1, 1, buf); publish("temp", buf);
-      dtostrf(hum, 1, 1, buf);  publish("hum", buf);
-      itoa(sound, buf, 10);     publish("sound", buf);  // raw value
-      itoa(crowd, buf, 10);     publish("crowd", buf);
+      if (dhtFresh()) {
+        dtostrf(temp, 1, 1, buf); publish("temp", buf);
+        dtostrf(hum, 1, 1, buf);  publish("hum", buf);
+      } else {
+        publish("temp", "ERROR");
+        publish("hum", "ERROR");
+      }
+      itoa(sound, buf, 10);     publish("sound", buf);
       publish("location", LOC_IDS[locIdx]);
-      // (sitg7/room1/hvac is now published by Board 2, the board that decides it)
 
-      // For Serial Plotter (Tools > Serial Plotter):
       Serial.print("temp:"); Serial.print(temp);
       Serial.print(" hum:"); Serial.print(hum);
       Serial.print(" soundRaw:"); Serial.print(soundRaw);
       Serial.print(" soundAvg:"); Serial.print(sound);
       Serial.print(" ldr:"); Serial.println(ldr);
 
-      // Status message:
       Serial.print(LOC_IDS[locIdx]);
       Serial.print(F("  T=")); Serial.print(temp, 1);
       Serial.print(F(" H="));  Serial.print(hum, 1);
@@ -598,39 +592,19 @@ void loop() {
     }
   }
 
-  // every 15 s: Store reading in buffer (instead of POSTing immediately)
-  if (haveData && now - lastSheet >= SHEET_INTERVAL) {
+  if (dhtFresh() && now - lastSheet >= SHEET_INTERVAL) {
     lastSheet = now;
-    buffer[bufferIdx].temp = temp;
-    buffer[bufferIdx].hum = hum;
-    buffer[bufferIdx].sound = sound;
-    buffer[bufferIdx].ldr = ldr;
-    strcpy(buffer[bufferIdx].occupancy, occupied ? "OCCUPIED" : "VACANT");
-    bufferIdx++;
-    Serial.print(F("Buffered reading ")); Serial.print(bufferIdx); Serial.println(F("/4"));
-
-    // Sensor row with Board 2's lighting, fan and HVAC values (the Light Status / Fan Speed columns)
     sendToSheet();
   }
 
-  // every 60 s: Send batch of 4 readings to Sheet
-  if (bufferIdx >= 4 && now - lastBatchPost >= 60000) {
-    lastBatchPost = now;
-    sendBatchToSheet();
-    bufferIdx = 0;  // reset buffer
-  }
-
-  // lights / fan / HVAC to the Sheet: when they change (at most every 20 s), and every 60 s anyway.
-  if (energyOnline() && energyLed >= 0 && energyFan >= 0 && now - lastSheet >= 5000) {
+  if (energyOnline() && energyLed >= 0 && energyFan >= 0) {
     bool changed = (energyLed != sentLed || energyFan != sentFan || hvacLevel != sentHvac);
-    unsigned long since = now - lastEnergySheet;
-    if ((changed && since >= ENERGY_MIN_GAP) || since >= ENERGY_INTERVAL) {
+    if (changed && now - lastEnergySheet >= ENERGY_MIN_GAP) {
       lastEnergySheet = now;
       sendEnergyToSheet();
     }
   }
 
-  // backlight ~30 times a second
   if (now - lastLight >= 30) {
     lastLight = now;
     updateBacklight();

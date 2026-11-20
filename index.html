@@ -1803,6 +1803,8 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
       var lr = liveFac[s.key], lh = liveHist[s.key];
       if (lr && lr.count !== null) {
         var o = h + '<p class="pstat"><b>' + lr.count + "</b>" + (lr.capacity ? " of " + lr.capacity : "") + " inside" + (lr.pct !== null ? " (" + Math.round(lr.pct) + "%)" : "") + ", " + esc(ago(lr.crowdAt)) + "</p>";
+        var sg = lr.suggest ? spotByKey(lr.suggest) : null;
+        if (sg && sg.key !== s.key) { o += '<p class="pstat">Less busy: <b>' + esc(sg.name) + "</b></p>"; }
         if (lh && lh.length > 1) { o += lineChart(lh, function (p) { return p.n; }, lr.capacity, " inside") + '<p class="pcap">Readings since you opened the map, every ' + LIVE_EVERY / 1e3 + " s.</p>"; }
         return o + liveBadge(lr, "crowdAt") + "</div>";
       }
@@ -2577,7 +2579,8 @@ body.panel-on:not(.collapsed) #switcher{left:calc(424px + (100% - 424px) / 2);ma
             light: onOff(r.light_on), fan: num(r.fan_pct), hvac: hv === "MED" ? "MEDIUM" : hv,
             bright: num(r.brightness), mode: String(r.mode || "").trim().toUpperCase(),
             temp: num(r.temperature), hum: num(r.humidity), comfort: String(r.comfort || "").trim().toUpperCase(),
-            booking: String(r.booking || "").trim().toUpperCase()};
+            booking: String(r.booking || "").trim().toUpperCase(),
+            suggest: String(r.suggest || "").trim().toUpperCase()};
   }
   function applyLive(list) {
     var n = 0;

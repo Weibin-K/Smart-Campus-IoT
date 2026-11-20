@@ -49,7 +49,8 @@ const LIVE_COLUMNS = {
     pct:        ["occupancy (%)", "occupancy %", "occupancy_pct", "percent", "%"],
     status:     ["crowd status", "crowd_status", "status"],
     count:      ["current occupancy", "current_occupancy", "people inside", "occupancy", "count", "people"],
-    capacity:   ["max occupancy", "max_occupancy", "capacity", "max capacity"]
+    capacity:   ["max occupancy", "max_occupancy", "capacity", "max capacity"],
+    suggest:    ["facility suggestion", "facility_suggestion", "suggestion"]
   },
   energy: {
     facility:   ["facility id", "facility_id", "facility", "location id", "location"],
@@ -157,6 +158,8 @@ function buildLive_() {
     if (c.bookingEnd) { r.booking_end = c.bookingEnd instanceof Date ? Utilities.formatDate(c.bookingEnd, tz, "HH:mm") : String(c.bookingEnd); }
     if (c.source) { r.source = String(c.source).trim().toUpperCase(); }
     r.crowd_ts = c.ts || null;
+    const sug = String(c.suggest || "").trim().toUpperCase();
+    if (sug) { r.suggest = sug; }
   }
 
   // 3. energy: newest row per facility in the Energy Saving tab, and energy_<ID> from livePost

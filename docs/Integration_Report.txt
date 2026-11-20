@@ -1,0 +1,330 @@
+SIT SMART CAMPUS IoT (GROUP 7)
+INTEGRATION REPORT: WEBSITE, ARDUINO BOARDS AND MQTT
+Date: 18 November 2026
+
+======================================================================
+1. PURPOSE
+======================================================================
+
+This report describes how the three parts of the Smart Campus IoT
+system work together:
+
+  - the Arduino boards (sensing and energy control),
+  - the MQTT messaging layer that links the boards in real time, and
+  - the campus map website that shows live crowd, environment and
+    energy data to students.
+
+It also covers the Crowd Management notebook and the Google Apps
+Script / Google Sheet backend, because these connect the parts.
+
+======================================================================
+2. SYSTEM OVERVIEW
+======================================================================
+
+The system has two communication paths:
+
+  Path A: real-time control (MQTT)
+    Board 1 (Sensor Node) and Board 2 (Energy Saving) exchange
+    readings and decisions every few seconds through a public MQTT
+    broker. The Crowd Management notebook also publishes the crowd
+    level of W5 Common Study Space B to the same broker.
+
+  Path B: logging and display (HTTP)
+    Board 1 and the Crowd Management notebook send records to a
+    Google Apps Script web app over HTTPS POST. The script writes
+    them into a Google Sheet. The website reads the latest record
+    for each facility with GET ?action=latest and refreshes itself
+    automatically.
+
+Overall data flow:
+
+  Crowd radar (ESP32) --serial--> Crowd Management notebook
+        notebook --HTTPS POST--> Apps Script --> Google Sheet
+        notebook --MQTT sitg7/room1/crowd--> Board 2
+
+  Board 1 Sensor Node --MQTT sitg7/room1/...--> Board 2
+  Board 2 Energy Saving --MQTT sitg7/room1/energy/...--> Board 1
+  Board 1 --HTTPS POST--> Apps Script --> Google Sheet
+
+  Google Sheet --> Apps Script GET ?action=latest (JSON)
+        --> Campus map website (GitHub Pages)
+
+  Website room controls --MQTT sitg7/<ID>/cmd/...--> Board 2
+        (planned, see Section 7)
+
+======================================================================
+3. COMPONENTS
+======================================================================
+
+3.1 Board 1: Sensor Node (Arduino Uno WiFi Rev2)
+    File: arduino/Board1_Sensor_Node/Board1_Sensor_Node.ino
+
+    Sensors and parts:
+      A0  DHT11 temperature and humidity
+      A1  sound sensor
+      A2  light sensor (LDR divider)
+      D2  PIR motion sensor
+      D4  button (location menu)
+      SDA/SCL  RGB LCD 1602
+
+    Role:
+      - Reads the room sensors and publishes them over MQTT.
+      - Lets the user choose the room location with the button
+        (press to change, wait 5 s to confirm). The location can
+        also be set remotely through sitg7/room1/cmd/location.
+      - Listens to Board 2's energy decisions and shows them on
+        the LCD. If Board 2 is silent for 10 s, the LCD shows
+        "Board 2: no link".
+      - Posts readings and energy state to Google Apps Script
+        (script.google.com) so they are logged and reach the
+        website.
+
+3.2 Board 2: Energy Saving (Arduino Uno WiFi Rev2)
+    File: arduino/Board2_Energy_Saving/Board2_Energy_Saving.ino
+
+    Outputs:
+      D5  LED (room lighting), PWM brightness
+      D9  fan (PWM through a transistor or fan module)
+      built-in LED: on while connected to the broker
+
+    Role:
+      - Subscribes to Board 1's readings and to command topics.
+      - Decides the HVAC level and fan speed from temperature,
+        humidity and crowd level.
+      - Turns the LED on only when the room is occupied and dark.
+        Lights switch off after a 2 minute delay once the room is
+        empty.
+      - Fail-safe: if nothing is heard from Board 1 for 20 s, the
+        LED and fan are switched off.
+      - Has two modes. In LIVE mode the crowd level comes from the
+        real sensors and notebook. In SIMULATION mode it comes from
+        the phone test panel (cmd/scenario, cmd/crowd).
+      - Publishes its decisions every 2 s, one topic per step, so
+        the board is never blocked.
+
+3.3 Crowd radar counter (ESP32 + LD2450 radar)
+    File: arduino/crowd_radar_counter/crowd_radar_counter.ino
+
+    Role:
+      - Counts people crossing a doorway and prints lines such as
+        "TARGET 1  ENTER | Campus Gym | People in room: 1/20 | LOW".
+      - For the demo, the ESP32 is connected by USB serial (default
+        COM5) to the Crowd Management notebook, which applies each
+        ENTER or EXIT to the facility selected in the notebook.
+      - The sketch also contains a ThingSpeak upload path, which is
+        not used by the website.
+
+3.4 Crowd Management notebook (Jupyter)
+    File: Crowd_Management_Demo.ipynb
+
+    Role:
+      - Holds the occupancy of eight facilities: Food Court A and B,
+        Library Common Study Space, W5 Common Study Space B, Campus
+        Gym and Discussion Rooms 1 to 3.
+      - Takes input from the live radar, from the Simulate ENTER /
+        EXIT buttons, or from scripted scenarios.
+      - Works out crowd status (NONE, LOW, MEDIUM, HIGH, OVER
+        CAPACITY), "approaching HIGH" warnings, food-court waits,
+        facility suggestions and discussion-room booking states.
+      - Sends changed rows to Google Sheets automatically (only
+        facilities whose values changed are sent).
+      - When "Enable Energy link" is on, publishes the crowd level of
+        W5 Common Study Space B to MQTT topic sitg7/room1/crowd as a
+        number (0 = none, 1 = low, 2 = medium, 3 = high or over
+        capacity). It publishes on every change and at least every
+        5 s as a heartbeat. Board 2 uses this to set the fan.
+
+    Required Python packages:
+      ipywidgets pyserial requests paho-mqtt
+
+3.5 Google Apps Script and Google Sheet
+    Files: apps-script/Code.gs, apps-script/LiveApi.gs
+
+    Role:
+      - doPost: accepts records from Board 1 and the notebook
+        (protected by an API key) and writes them to the sheet.
+      - doGet ?action=latest: returns one JSON record per facility,
+        combining crowd, environment and energy data. This is the
+        only endpoint the website needs.
+      - The Facilities tab maps facility IDs (FCA, FCB, LIB, STB,
+        GYM, DR1 to DR3) to names and capacities.
+
+3.6 Campus map website
+    Files: index.html, leaflet.js, data/, facilities.csv
+    Hosting: GitHub Pages (https://weibin-k.github.io/Smart-Campus-IoT/)
+
+    Role:
+      - Shows the SIT campus map with directions, floors and
+        facility markers.
+      - Fetches the live API and updates markers and place panels:
+        "42 of 60 inside", crowd colour, temperature, humidity,
+        comfort, HVAC level, fan speed and light state, with a
+        "Live, updated hh:mm:ss" label.
+      - Crowd colours: Quiet under 35 percent full (green), Moderate
+        under 65 percent (yellow), Busy under 85 percent (orange),
+        Packed (red).
+      - Opening index.html?mock=1 uses data/mock_live.js to show
+        simulated live data without any boards. This is used for
+        testing and as a demo backup.
+      - Room controls (light, brightness, HVAC, mode) build MQTT
+        commands, but they are not sent yet (see Section 7).
+
+======================================================================
+4. MQTT DESIGN
+======================================================================
+
+Broker: broker.emqx.io, port 1883 (public, no login).
+All topics start with "sitg7/" to avoid clashes with other users of
+the public broker. Each board must use its own client ID.
+
+4.1 Board 1 to Board 2 (sensor readings)
+    sitg7/room1/temp        temperature in C
+    sitg7/room1/hum         humidity in percent
+    sitg7/room1/sound       sound level
+    sitg7/room1/occupancy   PIR occupancy
+    sitg7/room1/ldr         light level
+    sitg7/room1/location    selected location ID
+
+4.2 Crowd Management notebook to Board 2
+    sitg7/room1/crowd       0, 1, 2 or 3 (crowd level of W5 Common
+                            Study Space B)
+
+4.3 Board 2 to Board 1 and dashboards (energy decisions)
+    sitg7/room1/energy/hvac, lighting, ambient, fan, brightness,
+    hvac_detail, actual_temp, actual_hum, temp, hum, crowd,
+    occupancy, mode, scenario, dht_status, link
+    sitg7/room1/hvac        HVAC level (summary)
+
+4.4 Commands to Board 2 (phone test panel)
+    sitg7/room1/cmd/mode, scenario, crowd, fan, light, brightness,
+    occupancy, ambient
+
+4.5 Commands to Board 1
+    sitg7/room1/cmd/location
+
+4.6 Website commands (agreed in the data contract, not yet active)
+    sitg7/<facility ID>/cmd/light, brightness, hvac, mode
+
+======================================================================
+5. WEBSITE DATA CONTRACT
+======================================================================
+
+GET <Apps Script URL>?action=latest returns one record per facility.
+Every field is optional; the map shows whatever it receives.
+
+  facility_id         e.g. "FCA"           which map marker
+  current_occupancy   e.g. 42              "42 of 60 inside"
+  capacity            e.g. 60              percent and colour
+  occupancy_pct       e.g. 70              colour if no count
+  crowd_status        e.g. "HIGH"          colour if no count or %
+  temperature         e.g. 26.4            place panel tile
+  humidity            e.g. 63              place panel tile
+  comfort             COOL/COMFY/WARM/HOT/HUMID
+  hvac                OFF/LOW/MEDIUM/HIGH
+  fan_pct             e.g. 70              fan bar
+  light_on            true/false           lights ON/OFF
+  brightness, mode    e.g. 75, "MANUAL"    room controls
+  time, ts            update time          "updated 14:03:12"
+
+======================================================================
+6. END-TO-END EXAMPLE
+======================================================================
+
+1. A student walks into W5 Common Study Space B. The radar prints
+   "ENTER" and the notebook raises the count.
+2. The count crosses 40 percent of capacity, so the status changes
+   from LOW to MEDIUM.
+3. The notebook publishes 2 to sitg7/room1/crowd and sends the new
+   row to Google Sheets.
+4. Board 2 receives the crowd level, combines it with Board 1's
+   temperature and humidity, and raises the HVAC level and fan
+   speed. It publishes the new values on sitg7/room1/energy/...
+5. Board 1 receives the decision, shows it on the LCD and posts it
+   to Apps Script.
+6. On its next refresh, the website fetches ?action=latest and
+   shows the new occupancy, crowd colour and fan speed on the map.
+
+Typical delays: MQTT path under 1 to 2 s; sheet to website up to
+one refresh cycle plus Apps Script response time (around 15 to 60 s).
+
+======================================================================
+7. CURRENT STATUS AND KNOWN ISSUES
+======================================================================
+
+Working:
+  - Board 1 and Board 2 connected through MQTT.
+  - Board 2 fail-safe and Board 1 "no link" indication.
+  - Notebook to Google Sheets automatic sync.
+  - Notebook to Board 2 crowd level over MQTT.
+  - Website live API reading and mock mode.
+
+Open items:
+  a) Website commands are not published yet. index.html builds the
+     topic sitg7/<ID>/cmd/<name> and calls window.sendCommand, but
+     no MQTT client is loaded on the page, so the panel shows "Not
+     sent". To finish this, add an MQTT-over-WebSocket client (for
+     example mqtt.js) connecting to broker.emqx.io on the WebSocket
+     port (8084 for wss), and define window.sendCommand to publish.
+     Board 2 currently subscribes only to sitg7/room1/cmd/#, so it
+     would also need to subscribe to the facility ID topics.
+  b) The main README lists broker.hivemq.com, but the boards and
+     notebook use broker.emqx.io. The README should be updated so
+     every part uses the same broker.
+  c) The radar counter sketch still contains ThingSpeak upload
+     code. For the demo it goes through the notebook by USB serial.
+     Posting directly to Apps Script would remove the laptop from
+     the chain.
+  d) The public broker has no authentication, so anyone who knows
+     the topic names can publish commands. This is acceptable for a
+     demo, but a real deployment needs a private broker with
+     usernames, passwords and TLS.
+  e) Simulated counts in the notebook are now capped at capacity,
+     because Google Sheets rejects counts above capacity. Live radar
+     crossings are not capped yet.
+
+======================================================================
+8. TESTING
+======================================================================
+
+  - Website without boards: open index.html?mock=1 and check that
+    the markers and panels update.
+  - MQTT: use an MQTT client (for example MQTTX) subscribed to
+    sitg7/# to watch all traffic, and publish to cmd topics to
+    test Board 2.
+  - Fail-safe: unplug Board 1 and confirm Board 2 turns the LED and
+    fan off after 20 s, and Board 1's LCD shows "Board 2: no link"
+    when Board 2 is unplugged.
+  - Notebook: enable the Energy link, use Simulate ENTER on W5
+    Common Study Space B and watch sitg7/room1/crowd and the fan
+    respond.
+  - End to end: change a count and confirm the website shows it
+    after the next refresh.
+  The full checklist is in TESTING.md.
+
+======================================================================
+9. SETUP CHECKLIST
+======================================================================
+
+  1. Arduino IDE: install "Arduino megaAVR Boards", plus WiFiNINA,
+     ArduinoMqttClient, DFRobot_RGBLCD1602 and the dht library.
+  2. Fill in the Wi-Fi password in both board sketches and the API
+     key in Board 1 (search for YOUR_). Upload Board 1 and Board 2.
+  3. Notebook: run %pip install ipywidgets pyserial requests
+     paho-mqtt, restart the kernel, run the dashboard cell and
+     enter the API key. Click Enable Energy link.
+  4. Radar: close the Arduino Serial Monitor, enter the port and
+     click Connect ESP32.
+  5. Open the website and check that the facilities show live data.
+
+======================================================================
+10. CONCLUSION
+======================================================================
+
+The system splits the work into two layers. MQTT carries fast
+messages between the boards and the notebook, so the lights and fan
+react within a second or two. Google Apps Script and the Google
+Sheet act as a simple logging backend and single API for the
+website, which reads one JSON endpoint and needs no direct link to
+the hardware. The main remaining work is publishing the website's
+room commands over MQTT so control can go both ways, and making
+every part use the same broker.
